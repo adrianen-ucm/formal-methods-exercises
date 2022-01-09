@@ -1,0 +1,132 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage[shortlabels]{enumitem}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+
+\title{Assignment 1 on Program Semantics}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+Let us assume $e, e' \in$ \textbf{AExp} and $x \in$ \textbf{Var}. The
+notation $e[x/e']$ denotes the result of replacing all occurrences of $x$
+in $e$ by $e'$. For example: $(x + y)[x/(3 * z)] = (3 * z) + y$.
+
+\begin{enumerate}[(a)]
+  \item Define $e[x/e']$ in a compositional way.
+
+    \begin{align*}
+      n[x/e'] &= n \\
+      x[y/e'] &= x \\
+      x[x/e'] &= e' \\
+      (e_1 + e_2)[x/e'] &= e_1[x/e'] + e_2[x/e'] \\
+      (e_1 - e_2)[x/e'] &= e_1[x/e'] - e_2[x/e'] \\
+      (e_1 * e_2)[x/e'] &= e_1[x/e'] * e_2[x/e'] 
+    \end{align*}
+
+    $\forall n \in$ \textbf{Num}, $\forall x, y \in$ \textbf{Var} with 
+    $x \neq y$ and $\forall e_1, e_2, e' \in$ \textbf{AExp}.
+
+  \item Prove the following \textit{substitution lemma}: for all $e, e' \in$
+    \textbf{AExp}, $x \in$ \textbf{Var}, $\sigma \in$ \textbf{State}:
+
+    $$
+      \mathcal{A}\llbracket e[x/e']\rrbracket \sigma = 
+        \mathcal{A}\llbracket e\rrbracket \sigma 
+          [x \mapsto \mathcal{A}\llbracket e'\rrbracket\sigma]
+    $$
+ 
+    Recall the compositional definition of $\mathcal{A}\llbracket \_ 
+    \rrbracket : \text{\textbf{AExp}} \rightarrow \text{\textbf{State}} 
+    \rightarrow \mathbb{Z}$ as
+
+    \begin{align*}
+      \mathcal{A}\llbracket n \rrbracket \sigma &= n \\
+      \mathcal{A}\llbracket x \rrbracket \sigma &= \sigma(x) \\
+      \mathcal{A}\llbracket e_1 + e_2 \rrbracket \sigma &= 
+        \mathcal{A}\llbracket e_1 \rrbracket \sigma + 
+        \mathcal{A}\llbracket e_2 \rrbracket \sigma \\
+      \mathcal{A}\llbracket e_1 - e_2 \rrbracket \sigma &= 
+        \mathcal{A}\llbracket e_1 \rrbracket \sigma - 
+        \mathcal{A}\llbracket e_2 \rrbracket \sigma \\
+      \mathcal{A}\llbracket e_1 * e_2 \rrbracket \sigma &= 
+        \mathcal{A}\llbracket e_1 \rrbracket \sigma * 
+        \mathcal{A}\llbracket e_2 \rrbracket \sigma 
+    \end{align*}
+    
+    $\forall n \in$ \textbf{Num}, $\forall x \in$ \textbf{Var} and $\forall
+    e_1, e_2 \in$ \textbf{AExp}. Recall also the definition of $\_[\_ \mapsto \_] : 
+    \text{\textbf{State}} \rightarrow 
+    \text{\textbf{Var}} \rightarrow
+    \text{\textbf{AExp}} \rightarrow
+    \text{\textbf{State}}$ as 
+    
+    $$
+      \sigma[x \mapsto e](y) = 
+        \begin{cases}
+          e & \text{if y = x} \\ 
+          \sigma(y) & \text{otherwise}
+        \end{cases}
+    $$
+
+    On the one hand, let $n \in$ \textbf{Lit}. As $\mathcal{A}\llbracket n[x/e']\rrbracket 
+    \sigma = \mathcal{A} \llbracket n \rrbracket \sigma = 
+    \mathcal{A} \llbracket n \rrbracket \sigma' = n$ 
+    $\forall \sigma, \sigma' \in$ \textbf{State} and $\forall e' \in$ 
+    \textbf{AExp}, the property holds for literal expressions.
+    
+    On the other hand, let $x \in$ \textbf{Var}. As $\mathcal{A} \llbracket
+    x[y/e'] \rrbracket \sigma = \mathcal{A} \llbracket x \rrbracket \sigma
+    = \sigma(x)$ and $\sigma(x) = \sigma[y \mapsto e''](x)$ $\forall y \in$
+    \textbf{Var} with $x \neq y$, $\forall \sigma \in$ \textbf{State} and
+    $\forall e', e'' \in$ \textbf{AExp}, the property also holds for
+    variable expressions when we are not replacing the same variable.
+
+    We are left with the base element case of a variable expression which 
+    is being replaced. Let us develop each side of the property equation
+    separately:
+
+    \begin{align*}
+      \mathcal{A}\llbracket x[x/e']\rrbracket \sigma &=
+        \mathcal{A}\llbracket e' \rrbracket \sigma \\
+      \mathcal{A}\llbracket x\rrbracket \sigma [x \mapsto 
+      \mathcal{A}\llbracket e' \rrbracket\sigma] &= \sigma [x \mapsto 
+      \mathcal{A}\llbracket e' \rrbracket\sigma](x) = 
+      \mathcal{A}\llbracket e' \rrbracket\sigma
+    \end{align*}
+
+    $\forall x \in$ \textbf{Var}, $\forall e' \in$ \textbf{AExp} and $\forall
+    \sigma \in$ \textbf{State}, so the property holds for all the base element cases. 
+
+    Now, in order to proceed with the proof by structural induction, let $e_1,
+    e_2 \in$ \textbf{AExp}. If both $e_1$ and $e_2$ satisfy the property,
+    then
+
+    \begin{equation*}
+    \begin{split}
+      \mathcal{A}\llbracket (e_1 + e_2)[x/e'] \rrbracket \sigma &=
+      \mathcal{A}\llbracket e_1[x/e'] + e_2[x/e']\rrbracket \sigma\\ 
+      &= \mathcal{A}\llbracket e_1[x/e']\rrbracket\sigma +
+          \mathcal{A}\llbracket e_2[x/e']\rrbracket\sigma\\
+      &=
+      \mathcal{A}\llbracket e_1\rrbracket \sigma[x \mapsto
+      \mathcal{A}\llbracket e' \rrbracket \sigma] + 
+      \mathcal{A}\llbracket e_2\rrbracket \sigma[x \mapsto
+      \mathcal{A}\llbracket e' \rrbracket \sigma] \\ 
+      &= \mathcal{A}\llbracket (e_1 + e_2)\rrbracket\sigma[x \mapsto
+      \mathcal{A}\llbracket e' \rrbracket \sigma] 
+    \end{split}
+    \end{equation*}
+ 
+    $\forall \sigma \in$ \textbf{State}, $\forall e' \in$ \textbf{AExp} 
+    and $\forall x \in$ \textbf{Var}. 
+
+    The property can be proven in a similar way for the remaining composite 
+    elements (i.e. $-$ and $*$).
+\end{enumerate}
+
+\end{document}

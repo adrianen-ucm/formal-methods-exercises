@@ -1,0 +1,234 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{minted}
+
+\renewcommand{\thesubsection}{Exercise \arabic{subsection}}
+
+\renewcommand{\thesubsubsection}{
+  Answer
+}
+
+\title{Untyped $\lambda$-calculus exercises}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+\section*{The $\lambda$-calculus in Haskell}
+
+\setcounter{subsection}{10}
+
+\subsection{}\label{ex:11}
+
+Using Haskell, define functions boolChurch and boolUnchurch 
+which translate Haskell booleans into Church booleans and 
+vice versa. Use them to check the correctness of your 
+solutions to Exercise 6.
+
+\subsubsection{}
+
+The implementation is provided in a Haskell source code file
+named \verb|ChurchBool.hs| within the folder 
+\verb|untyped-church-encodings|.
+
+The script \verb|church-bool-test.sh| simulates a sample session
+in \verb|ghci| using the defined module and can be executed as 
+follows:
+
+\begin{verbatim}
+chmod u+x church-bool-test.sh && ./church-bool-test.sh
+\end{verbatim}
+
+\subsection{}\label{ex:12}
+
+Analogously to the previous exercise, define Haskell 
+functions to convert between Haskell and Church natural 
+numbers, and check the correctness of your solutions to 
+to Exercise 7.
+
+\subsubsection{}
+
+The implementation is provided in a Haskell source code file
+named \verb|ChurchNum.hs| within the folder 
+\verb|untyped-church-encodings|.
+
+As in the previous exercise, the script \verb|church-num-test.sh| 
+simulates a sample session in \verb|ghci| using the defined module 
+and can be executed as follows:
+
+\begin{verbatim}
+chmod u+x church-num-test.sh && ./church-num-test.sh
+\end{verbatim}
+
+\subsection*{Note for the following exercises}
+
+The code shown for the following exercises is also provided 
+as a Haskell project managed with Cabal within the folder 
+\verb|untyped-lambda-calculus|.
+
+A simple test suite is also available, which can be executed 
+with the script \verb|test.sh| as follows:
+
+\begin{verbatim}
+chmod u+x test.sh && ./test.sh
+\end{verbatim}
+
+\subsection{}\label{ex:13}
+
+Define a Haskell datatype to represent the abstract 
+syntax of the $\lambda$-calculus.
+
+\subsubsection{}
+
+We have used \verb|String| for the set of variable names, but we 
+could have used another set or even parameterize it. The datatype 
+and its value constructor names are self explanatory:
+
+\begin{minted}{haskell}
+data Term
+  = Var String
+  | Lam String Term
+  | App Term Term
+\end{minted}
+
+\subsection{}\label{ex:14}
+
+Based on the previous exercise, define a Haskell function 
+that obtains the free variables of a lambda term.
+
+\subsubsection{}
+
+We have used a \verb|Set| data structure from the 
+\verb|containers| package. The function does pattern
+match on each \verb|Term| value constructor:
+
+\begin{minted}{haskell}
+freeVars :: Term -> S.Set String
+freeVars (Var v)     = S.singleton v
+freeVars (Lam v t)   = S.delete v $ freeVars t
+freeVars (App t1 t2) = freeVars t1 <> freeVars t2
+\end{minted}
+
+\subsection{}\label{ex:15}
+
+Based on the previous exercises, define a Haskell function 
+that implements capture avoiding substitution.
+
+\subsubsection{}
+
+First, we provide an auxiliary function for obtaining an 
+infinite stream of variable names:
+
+\begin{minted}{haskell}
+auxVars :: Char -> [String]
+auxVars p = map ((p :) . show) [0 :: Integer ..]
+\end{minted}
+
+The following function instantiates one of this infinite 
+streams of variable names, filters some elements which would 
+be already useless and proceeds with a recursive definition 
+case by case for the capture avoiding variable substitution:
+
+\begin{minted}{haskell}
+subs :: String -> Term -> Term -> Term
+subs v e =
+  go . filter (`S.notMember` freeE) . auxVars $ 'x'
+  where
+    freeE = freeVars e
+    go aux (App t1 t2) = App (go aux t1) (go aux t2)
+    go _ t@(Var v')
+      | v' == v = e
+      | otherwise = t
+    go aux t@(Lam v' b)
+      | v' == v || not bodyCapture = t
+      | bodyCapture && not varCapture = Lam v' $ go aux b
+      | otherwise = Lam auxVar . go aux' . subs v' (Var auxVar) $ b
+      where
+        freeT = freeVars b
+        bodyCapture = v `S.member` freeT
+        varCapture = v' `S.member` freeE
+        (auxVar : aux') = dropWhile (`S.member` freeT) aux
+\end{minted}
+
+Note that, once it requires a fresh variable, it starts consuming
+the variable names stream until it finds one that is fine and keeps
+the remaining contents of the stream for later.
+
+\subsection{}\label{ex:16}
+
+Based on the previous exercises, define a Haskell function 
+that implements $\beta$-reduction (one step).
+
+\subsubsection{}
+
+The following function performs a single step 
+$\beta$-reduction only if a $\beta$-redex is 
+provided, and returns \verb|Nothing| in any 
+other case:
+
+\begin{minted}{haskell}
+betaRed :: Term -> Maybe Term
+betaRed (App (Lam v t) e) = Just $ subs v e t
+betaRed _                 = Nothing
+\end{minted}
+
+Now, to perform a reduction like that in just 
+one subterm by following a specific evaluation order, we 
+define a function which takes a transformation an 
+performs it to the first subterm which admits it according
+to normal order evaluation. It takes advantage of the 
+\verb|Alternative| typeclass instance of \verb|Maybe| 
+to achieve such a concise definition:
+
+\begin{minted}{haskell}
+normalOrder :: Alternative f => (Term -> f Term) -> Term -> f Term
+normalOrder red v@(Var _) = red v
+normalOrder red l@(Lam v t) =
+  red l
+    <|> (Lam v <$> normalOrder red t)
+normalOrder red a@(App t1 t2) =
+  red a
+    <|> ((`App` t2) <$> normalOrder red t1)
+    <|> ((t1 `App`) <$> normalOrder red t2)
+\end{minted}
+
+With this, we can get a function which performs a single 
+step $\beta$-reduction in normal order evaluation as follows:
+
+\begin{minted}{haskell}
+normalOrder betaRed
+\end{minted}
+
+\subsection{}\label{ex:17}
+
+Based on the previous exercises, define a Haskell function 
+that reduces a lambda term into $\beta$-normal form when 
+possible.
+
+\subsubsection{}
+
+The following function performs recursively a single step 
+$\beta$-reduction in normal order evaluation until it does 
+not admit more steps:
+
+\begin{minted}{haskell}
+betaNorm :: Term -> Term
+betaNorm t = maybe t betaNorm $ beta t
+  where
+    beta = normalOrder betaRed
+\end{minted}
+
+Suppose that we had also defined a single step $\eta$-reduction 
+for an $\eta$-redex named \verb|etaRed|. Note how easy it would 
+be to extend the previous definition to $\beta\eta$-normal forms:
+
+\begin{minted}{haskell}
+betaEtaNorm :: Term -> Term
+betaEtaNorm t = maybe t betaEtaNorm $ beta t <|> eta t
+  where
+    beta = normalOrder betaRed
+    eta = normalOrder etaRed
+\end{minted}
+
+\end{document}

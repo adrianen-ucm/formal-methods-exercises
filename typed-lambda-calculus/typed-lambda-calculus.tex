@@ -1,0 +1,885 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{mathpartir}
+\usepackage{xcolor}
+
+\renewcommand{\thesubsection}{Exercise \arabic{subsection}}
+
+\newenvironment{changemargin}[2]{%
+\begin{list}{}{%
+\setlength{\topsep}{0pt}%
+\setlength{\leftmargin}{#1}%
+\setlength{\rightmargin}{#2}%
+\setlength{\listparindent}{\parindent}%
+\setlength{\itemindent}{\parindent}%
+\setlength{\parsep}{\parskip}%
+}%
+\item[]}{\end{list}}
+
+\title{Simply-typed $\lambda$-calculus exercises}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+\subsection{}\label{ex:1}
+
+Give a proof in TA$_\lambda$ for the following type assignment
+for function composition:
+
+$$
+  \vdash \lambda f.\lambda g. \lambda x.f\;(g\;x) : 
+    (b \rightarrow c) \rightarrow 
+    (a \rightarrow b) \rightarrow
+    (a \rightarrow c)
+$$
+
+Its proof tree is the following:
+
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    f : b \rightarrow c \vdash f: b \rightarrow c
+  } \\
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    g:a \rightarrow b \vdash g:a \rightarrow b
+  } \\ 
+  \inferrule*[Right=VAR]{\;}{
+    x:a \vdash x:a
+  }
+  }{
+    g:a \rightarrow b, x:a \vdash g\;x:b
+  }
+  }{
+      f:b \rightarrow c, g:a \rightarrow b, x:a 
+      \vdash 
+      f\;(g\;x):c
+  }
+  }{
+    f:b \rightarrow c, g:a \rightarrow b
+    \vdash 
+    \lambda x.f\;(g\;x):  
+      a \rightarrow c
+  }
+  }{
+    f:b \rightarrow c \vdash
+      \lambda g. \lambda x.f\;(g\;x):  
+        (a \rightarrow b) \rightarrow
+        (a \rightarrow c)
+  }
+  }{
+    \vdash \lambda f.\lambda g. \lambda x.f\;(g\;x): 
+    (b \rightarrow c) \rightarrow 
+    (a \rightarrow b) \rightarrow
+    (a \rightarrow c)
+  }
+\end{mathpar}
+
+\subsection{}\label{ex:2}
+
+Provide a type for the combinator $\mathsf{S} = 
+\lambda x. \lambda y. \lambda z. (x\;z)\;(y\;z)$.
+
+Its type can be
+
+$$
+    (a \rightarrow b \rightarrow c) \rightarrow 
+    (a \rightarrow b) \rightarrow
+    (a \rightarrow c)
+$$
+
+and the corresponding proof tree is the following:
+
+\begin{changemargin}{-2cm}{-2cm}
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    x:a \rightarrow b \rightarrow c
+    \vdash 
+    x:a \rightarrow b \rightarrow c
+  }\\
+  \inferrule*[Left=VAR]{\;}{
+    z:a
+    \vdash 
+    z:a
+  }
+  }{
+    x:a \rightarrow b \rightarrow c,
+    z:a
+    \vdash 
+    x\;z:b \rightarrow c
+  } \\
+  \inferrule*[Right=APP]{
+  \inferrule*[Right=VAR]{\;}{
+    y:a \rightarrow b \vdash y:a \rightarrow b
+  } \\ 
+  \inferrule*[Right=VAR]{\;}{
+    z:a \vdash z:a
+  }
+  }{
+     y:a \rightarrow b,
+     z:a
+     \vdash 
+     y\;z:b
+  }
+  }{
+    x:a \rightarrow b \rightarrow c,
+    y:a \rightarrow b, 
+    z:a
+    \vdash
+    (x\;z)\;(y\;z):c
+  }
+  }{
+    x:a \rightarrow b \rightarrow c,
+    y:a \rightarrow b
+    \vdash 
+    \lambda z.(x\;z)\;(y\;z):  
+      a \rightarrow c
+  }
+  }{
+    x:a \rightarrow b \rightarrow c \vdash
+      \lambda y. \lambda z.(x\;z)\;(y\;z):  
+        (a \rightarrow b) \rightarrow
+        (a \rightarrow c)
+  }
+  }{
+    \vdash \lambda x.\lambda y. \lambda z.(x\;z)\;(y\;z): 
+    (a \rightarrow b \rightarrow c) \rightarrow 
+    (a \rightarrow b) \rightarrow
+    (a \rightarrow c)
+  }
+\end{mathpar}
+\end{changemargin}
+
+\subsection{}\label{ex:3}
+
+Provide a type for the term $\mathsf{II} = 
+(\lambda x.x)\;(\lambda x.x)$.
+
+Its type can be
+
+$$
+  a \rightarrow a
+$$
+
+and the corresponding proof tree is the following:
+
+\begin{mathpar}
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=ABS]{
+  \inferrule*[Left=VAR]{\;}{
+    x:a \rightarrow a \vdash x:a \rightarrow a
+  }
+  }{
+    \vdash \lambda x.x:
+      (a \rightarrow a) \rightarrow (a \rightarrow a)
+  } \\
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=VAR]{\;}{
+    x:a \vdash x:a
+  }
+  }{
+    \vdash \lambda x.x:
+      a \rightarrow a
+  } 
+  }{
+    \vdash (\lambda x.x)\;(\lambda x.x):a \rightarrow a
+  }
+\end{mathpar}
+
+\subsection{}\label{ex:4}
+
+Provide types for the terms in exercise 5 of the previous sheet
+(Church booleans) along with their corresponding derivation.
+
+$\mathsf{TRUE}$ can be assigned the type $a \rightarrow b \rightarrow a$, 
+and $\mathsf{FALSE}$ can be assigned the type $a \rightarrow b \rightarrow b$.
+Their respective proof trees are the following, from left to right:
+
+\begin{minipage}[t][3.3cm][t]{.3\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=VAR]{\;}{
+    x:a,y:b\vdash x:a
+  }
+  }{
+    x:a\vdash \lambda y.x:
+      b \rightarrow a
+  } 
+  }{
+    \vdash \lambda x.\lambda y.x:a \rightarrow b \rightarrow a
+  }
+\end{mathpar}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.3\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=VAR]{\;}{
+    x:a,y:b\vdash y:b
+  }
+  }{
+    x:a\vdash \lambda y.y:
+      b \rightarrow b
+  } 
+  }{
+    \vdash \lambda x.\lambda y.y:a \rightarrow b \rightarrow b
+  }
+\end{mathpar}
+\end{minipage}
+
+The term $\mathsf{NOT}$ can be assigned the type 
+$(a \rightarrow b \rightarrow c) \rightarrow b \rightarrow a 
+\rightarrow c$, as proved in the following derivation tree:
+
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    b:a \rightarrow b \rightarrow c
+    \vdash 
+    b:a \rightarrow b \rightarrow c
+  } \\
+  \inferrule*[Right=VAR]{\;}{
+    y:a \vdash y:a
+  } 
+  }{
+    b:a \rightarrow b \rightarrow c,
+    y:a
+    \vdash 
+    b\;y:b \rightarrow c 
+  } \\ 
+  \inferrule*[Right=VAR]{\;}{
+    x:b \vdash x:b
+  }
+  }{
+    b:a \rightarrow b \rightarrow c,
+    x:b,
+    y:a \vdash 
+      b\;y\;x:c
+  }
+  }{
+    b:a \rightarrow b \rightarrow c,
+    x:b \vdash 
+      \lambda y.b\;y\;x:
+        a \rightarrow c
+  }
+  }{
+    b:a \rightarrow b \rightarrow c \vdash 
+      \lambda x.\lambda y.b\;y\;x:
+        b \rightarrow a \rightarrow c
+  } 
+  }{
+    \vdash \lambda b.\lambda x.\lambda y.b\;y\;x:
+      (a \rightarrow b \rightarrow c) 
+      \rightarrow b \rightarrow a \rightarrow c
+  }
+\end{mathpar}
+
+The term $\mathsf{CONJ}$ can be assigned the type 
+
+$$(a \rightarrow b \rightarrow c) \rightarrow
+(d \rightarrow b \rightarrow a) \rightarrow
+d \rightarrow 
+b \rightarrow 
+c
+$$
+
+as proved in the following derivation tree:
+
+\begin{changemargin}{-2cm}{-2cm}
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    b:a \rightarrow b \rightarrow c
+    \vdash
+    b:a \rightarrow b \rightarrow c
+  } \\ 
+  \Delta_1
+  }{
+    b:a \rightarrow b \rightarrow c,
+    c:d \rightarrow b \rightarrow a,
+    x:d,
+    y:b
+    \vdash
+    b\;(c\;x\;y):b\rightarrow c
+  } \\
+  \inferrule*[Right=VAR]{\;}{
+    y:b
+    \vdash
+    y:b
+  }
+  }{
+    b:a \rightarrow b \rightarrow c,
+    c:d \rightarrow b \rightarrow a,
+    x:d,
+    y:b
+    \vdash
+      b\;(c\;x\;y)\;y:
+      c 
+  }
+  }{
+    b:a \rightarrow b \rightarrow c,
+    c:d \rightarrow b \rightarrow a,
+    x:d
+    \vdash \lambda y.
+      b\;(c\;x\;y)\;y:
+      b \rightarrow 
+      c 
+  }
+  }{
+    b:a \rightarrow b \rightarrow c,
+    c:d \rightarrow b \rightarrow a
+    \vdash \lambda x.\lambda y.
+      b\;(c\;x\;y)\;y:
+      d \rightarrow 
+      b \rightarrow 
+      c 
+  }
+  }{
+    b:a \rightarrow b \rightarrow c
+    \vdash \lambda c.\lambda x.\lambda y.
+      b\;(c\;x\;y)\;y:
+      (d \rightarrow b \rightarrow a) \rightarrow
+      d \rightarrow 
+      b \rightarrow 
+      c 
+  } 
+  }{
+    \vdash \lambda b.\lambda c.\lambda x.\lambda y.
+      b\;(c\;x\;y)\;y:
+      (a \rightarrow b \rightarrow c) \rightarrow
+      (d \rightarrow b \rightarrow a) \rightarrow
+      d \rightarrow 
+      b \rightarrow 
+      c 
+  }
+\end{mathpar}
+\end{changemargin}
+
+where the subtree $\Delta_1$ is the following:
+
+\begin{mathpar}
+\inferrule*[Right=APP]{
+\inferrule*[Left=APP]{
+\inferrule*[Left=VAR]{\;}{
+  c:d \rightarrow b \rightarrow a
+  \vdash 
+  c:d \rightarrow b \rightarrow a
+} \\ 
+\inferrule*[Left=VAR]{\;}{
+  x:d
+  \vdash 
+  x:d
+}
+}{
+  c:d \rightarrow b \rightarrow a,
+  x:d
+  \vdash
+  c\;x:b \rightarrow a
+} \\
+\inferrule*[Left=VAR]{\;}{
+  y:b
+  \vdash
+  y:b
+}
+}{
+  c:d \rightarrow b \rightarrow a,
+  x:d,
+  y:b
+  \vdash
+  c\;x\;y:a
+}
+\end{mathpar}
+
+The term $\mathsf{DISJ}$ can be assigned the type 
+
+$$
+(a \rightarrow b \rightarrow c) \rightarrow
+(a \rightarrow d \rightarrow b) \rightarrow
+a \rightarrow 
+d \rightarrow 
+c 
+$$
+
+as proved in the following derivation tree:
+
+\begin{changemargin}{-2cm}{-2cm}
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \Delta_2
+  \\
+  \inferrule*[Right=APP]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    c:a \rightarrow d \rightarrow b
+    \vdash
+    c:a \rightarrow d \rightarrow b
+  } \\ 
+  \inferrule*[Left=VAR]{\;}{
+    x:a
+    \vdash
+    x:a
+  }
+  }{
+    c:a \rightarrow d \rightarrow b,
+    x:a
+    \vdash
+    c\;x:d \rightarrow b
+  } \\
+  \inferrule*[Right=VAR]{\;}{
+    y:d
+    \vdash
+    y:d
+  }
+  }{
+    c:a \rightarrow d \rightarrow b,
+    x:a,
+    y:d
+    \vdash
+    c\;x\;y:b
+  }
+  }{
+    b:a \rightarrow b \rightarrow c,
+    c:a \rightarrow d \rightarrow b,
+    x:a,
+    y:d
+    \vdash
+      b\;x\;(c\;x\;y):
+      c 
+  }
+  }{
+    b:a \rightarrow b \rightarrow c,
+    c:a \rightarrow d \rightarrow b,
+    x:a
+    \vdash \lambda y.
+      b\;x\;(c\;x\;y):
+      d \rightarrow 
+      c 
+  }
+  }{
+    b:a \rightarrow b \rightarrow c,
+    c:a \rightarrow d \rightarrow b
+    \vdash \lambda x.\lambda y.
+      b\;x\;(c\;x\;y):
+      a \rightarrow 
+      d \rightarrow 
+      c 
+  }
+  }{
+    b:a \rightarrow b \rightarrow c
+    \vdash \lambda c.\lambda x.\lambda y.
+    b\;x\;(c\;x\;y):
+      (a \rightarrow d \rightarrow b) \rightarrow
+      a \rightarrow 
+      d \rightarrow 
+      c 
+  } 
+  }{
+    \vdash \lambda b.\lambda c.\lambda x.\lambda y.
+      b\;x\;(c\;x\;y):
+      (a \rightarrow b \rightarrow c) \rightarrow
+      (a \rightarrow d \rightarrow b) \rightarrow
+      a \rightarrow 
+      d \rightarrow 
+      c 
+  }
+\end{mathpar}
+\end{changemargin}
+
+where the subtree $\Delta_2$ is the following:
+
+\begin{mathpar}
+\inferrule*[Left=APP]{
+\inferrule*[Left=VAR]{\;}{
+  b:a \rightarrow b \rightarrow c
+  \vdash
+  b:a \rightarrow b \rightarrow c
+} \\
+\inferrule*[Left=VAR]{\;}{
+  x:a
+  \vdash
+  x:a
+} \\
+}{
+  b:a \rightarrow b \rightarrow c,
+  x:a
+  \vdash
+  b\;x:b \rightarrow c
+}
+\end{mathpar}
+
+\subsection{}\label{ex:5}
+
+Prove that if $\Gamma \vdash M: \sigma$ then 
+$\Gamma[a \mapsto \tau] \vdash M: \sigma[a \mapsto \tau]$. 
+
+Recall the definition of a type-variable substitution, simplified 
+for one substitution at a time, as
+
+\begin{align*}
+  a[a \mapsto \tau] &= \tau \\
+  b[a \mapsto \tau] &= b \\
+  (\tau_1 \rightarrow \tau_2)[a \mapsto \tau] &= 
+    \tau_1[a \mapsto \tau] \rightarrow \tau_2[a \mapsto \tau] \\
+\end{align*}
+
+where $a$ and $b$ are distinct type variables, and $\tau, \tau_1$ and 
+$\tau_2$ are arbitrary types.
+
+This definition is also extended to type contexts as
+
+$$
+  \Gamma[a \mapsto \tau] = 
+    x_1: \tau_1[a \mapsto \tau], 
+    x_2: \tau_2[a \mapsto \tau], 
+    ..., x_n: \tau_n[a \mapsto \tau]
+$$
+
+where $a$ is a type variable, $\tau$ is an arbitrary type, and
+$\Gamma = x_1: \tau_1, x_2: \tau_2, ..., x_n: \tau_n$ is a context.
+
+Note also that if a context $\Gamma$ is consistent, then also 
+is $\Gamma[a \mapsto \tau]$ for any type variable $a$ and type $\tau$.
+This is because if a variable $x$ were assigned two different types 
+$\tau_1$ and $\tau_2$ in $\Gamma[a \mapsto \tau]$ and a single type 
+$\tau$ in $\Gamma$, then $\tau[a \mapsto \tau] \neq \tau[a \mapsto \tau]$,
+which is not possible.
+
+Every type judgement must follow from a proof involving
+only the rules of the deductive system (i.e. VAR, ABS and APP).
+We are going to prove the statement by induction over the 
+proof tree of the type judgement. As the case distinction is made
+over type judgements of different shape, the context, types and variables 
+used in each case do not refer exactly to the ones used in the general 
+statement of the exercise.
+
+If the bottommost rule of the proof tree is VAR, we have a judgement 
+with shape $\Gamma, x: \sigma \vdash x: \sigma$. Trivially, $(\Gamma, x: \sigma)
+[a \mapsto \tau] \vdash x: \sigma[a \mapsto \tau]$ also follows 
+due to the VAR axiom because $(\Gamma, x: \sigma)
+[a \mapsto \tau] = \Gamma[a \mapsto \tau], x: \sigma[a \mapsto \tau]$
+and type-variable substitution preserves the context consistence.
+
+Proceeding with the first of the inductive cases, if the bottommost rule of 
+the proof tree is ABS, we have a judgement with shape 
+$\Gamma \vdash \lambda x. M: \sigma \rightarrow \sigma'$. The 
+ABS rule requires that $\Gamma, x: \sigma \vdash M: \sigma'$.
+By rule induction hypothesis on the proof tree of this premise, we 
+also have 
+
+\begin{align*}
+(\Gamma, x: \sigma)[a \mapsto \tau] 
+  &\vdash M: \sigma'[a \mapsto \tau] \\
+\Gamma[a \mapsto \tau], x: \sigma[a \mapsto \tau]
+  &\vdash M: \sigma'[a \mapsto \tau]
+\end{align*}
+
+where the consistence of $(\Gamma, x: \sigma)[a \mapsto \tau]$
+has been preserved with the type-variable substitution. This satisfies 
+also the ABS rule yielding to the conclusion that we were looking for:
+
+\begin{align*}
+\Gamma[a \mapsto \tau] 
+  &\vdash \lambda x. M: \sigma[a \mapsto \tau] \rightarrow \sigma'[a \mapsto \tau] \\
+\Gamma[a \mapsto \tau] 
+  &\vdash \lambda x. M: (\sigma \rightarrow \sigma')[a \mapsto \tau]
+\end{align*}
+
+Finally, for the last of the inductive cases, if the bottommost rule of the proof 
+tree is APP, we have a judgement with shape
+$\Gamma \cup \Gamma' \vdash M\;M': \sigma'$. The 
+APP rule requires that $\Gamma \vdash M : \sigma \rightarrow \sigma'$
+and $\Gamma' \vdash M' : \sigma$.
+
+By rule induction hypothesis on the proof tree of both premises, we
+also have
+
+\begin{align*}
+\Gamma[a \mapsto \tau] 
+  &\vdash M : (\sigma \rightarrow \sigma')[a \mapsto \tau] \\
+\Gamma[a \mapsto \tau]
+  &\vdash M : \sigma[a \mapsto \tau] \rightarrow \sigma'[a \mapsto \tau]
+\end{align*}
+
+and 
+
+\begin{align*}
+\Gamma'[a \mapsto \tau] \vdash M' : \sigma[a \mapsto \tau] 
+\end{align*}
+
+These last statements satisfy the APP rule yielding to 
+the conclusion that we were looking for:
+
+\begin{align*}
+\Gamma[a \mapsto \tau] \cup \Gamma'[a \mapsto \tau] 
+  &\vdash M\;M': \sigma'[a \mapsto \tau] \\
+(\Gamma \cup \Gamma')[a \mapsto \tau] 
+  &\vdash M\;M': \sigma'[a \mapsto \tau]
+\end{align*}
+
+Note again that the consistence of $\Gamma \cup \Gamma'$ has been 
+preserved with the type-variable substitution.
+
+\subsection{}\label{ex:6}
+
+Prove that if $\Gamma, x: \sigma \vdash M: \tau$ and 
+$\Gamma \vdash N: \sigma$ then 
+$\Gamma \vdash M[x \mapsto N]: \tau$.
+
+This time, we are going to prove the statement by structural
+induction on the lambda term where the substitution is
+taking place (i.e. $M$ from the statement). 
+Again, as the case distinction is made
+over lambda terms of different shape, the context, types and variables 
+used in each case do not refer exactly to the ones used in the general 
+statement of the exercise.
+
+If the lambda term is a variable, we have two possible 
+cases, according to the definition of capture-avoiding substitution, 
+depending on whether the variable being replaced is the same as the 
+term or not:
+
+\begin{itemize}
+  \item If the term is a variable $x$, its stated type judgement 
+    has shape $\Gamma, x: \sigma \vdash x: \sigma$ due to the VAR 
+    rule and, as $x[x \mapsto N] = N$, the property holds for any 
+    $N$ such that $\Gamma \vdash N: \sigma$.
+  \item If the term is a variable $y$ with $x \neq y$, its stated 
+    type judgement has shape $\Gamma, y: \tau, x: \sigma \vdash y: \tau$ 
+    due to the VAR rule and, as $y[x \mapsto N] = y$, 
+    and $\Gamma, y: \tau \vdash y: \tau$ due to the VAR rule, the 
+    property also holds.
+\end{itemize}
+
+Proceeding with one of the inductive cases, if the lambda term is 
+an application, its stated type judgement has shape 
+$\Gamma \cup \Gamma', x: \sigma \vdash M\;M': \tau'$,
+that is the same as $(\Gamma, x: \sigma) \cup (\Gamma', x: \sigma) 
+\vdash M\;M': \tau'$
+where its APP rule requires that
+$\Gamma, x: \sigma \vdash M : \tau \rightarrow \tau'$ and 
+$\Gamma', x: \sigma \vdash M': \tau$.
+
+By structural induction on the respective subterms $M$ and $M'$
+for these last type judgements, if $\Gamma \vdash N: \sigma$ then 
+we also have
+
+\begin{align*}
+  \Gamma
+  &\vdash M[x \mapsto N] : \tau \rightarrow \tau' \\
+  \Gamma' &\vdash M'[x \mapsto N]: \tau
+\end{align*}
+
+By applying the APP rule to these last premises, we reach the 
+conclusion that we were looking for:
+
+\begin{align*}
+  \Gamma \cup \Gamma' &\vdash M[x \mapsto N]\;M'[x \mapsto N]: \tau' \\
+  \Gamma \cup \Gamma' &\vdash (M\;M')[x \mapsto N]: \tau' \\
+\end{align*}
+
+Finally, if the lambda term is an abstraction, we have again several 
+cases to consider according to the definition of capture-avoiding 
+substitution:
+
+\begin{itemize}
+  \item Consider that the statement has shape 
+    $\Gamma, x: \sigma \vdash \lambda x. M : \tau \rightarrow \tau'$
+    (i.e. we are trying to replace the variable that is bound by an 
+    abstraction).
+
+    On the one hand, its ABS rule premise requires 
+    $\Gamma, x: \tau \vdash M : \tau'$, and it means that 
+    $\Gamma \vdash \lambda x. M : \tau \rightarrow \tau'$.
+
+    On the other hand, $(\lambda x. M)[x \mapsto N] = \lambda x. M$,
+    thus 
+    
+    $$\Gamma \vdash (\lambda x. M)[x \mapsto N] : \tau \rightarrow \tau'$$
+
+    and the property is satisfied.
+  \item Consider now the case where it has shape 
+    $\Gamma, x: \sigma \vdash \lambda y. M : \tau \rightarrow \tau'$ with 
+    $x \notin FV(M)$.
+
+    On the one hand, as $x$ does not appear free in $M$, it also does not appear 
+    free in $\lambda y. M$ and the type judgment 
+    will still true even without the type assignment for $x$ in the context
+    \footnote{This claim, although simple, may require its own proof.}:
+
+    $$\Gamma \vdash \lambda y. M : \tau \rightarrow \tau'$$
+
+    On the other hand, $(\lambda y. M)[x \mapsto N] = \lambda y. M$,
+    thus 
+    
+    $$\Gamma \vdash (\lambda y. M)[x \mapsto N] : \tau \rightarrow \tau'$$
+
+    and the property is satisfied.
+  \item Consider now the case where it has shape 
+    $\Gamma, x: \sigma \vdash \lambda y. M : \tau \rightarrow \tau'$ with 
+    $x \in FV(M)$ and $y \notin FV(N)$ for a term $N$ such that 
+    $\Gamma \vdash N: \sigma$.
+
+    On the one hand, its ABS rule premise requires 
+    $\Gamma, x: \sigma, y: \tau \vdash M : \tau'$
+    and, by rule induction hypothesis on the subterm $M$
+    for this last type judgement, we also have
+    
+    $$
+      \Gamma, y: \tau \vdash M[x \mapsto N] : \tau'
+    $$
+
+    This satisfies the ABS rule leading to 
+
+    $$
+      \Gamma \vdash \lambda y. M[x \mapsto N] : \tau \rightarrow \tau'
+    $$
+
+    On the other hand, in this case 
+    $(\lambda y. M)[x \mapsto N] = \lambda y. M[x \mapsto N]$,
+    thus
+    
+    $$\Gamma \vdash (\lambda y. M)[x \mapsto N] : \tau \rightarrow \tau'$$
+
+    and the property is satisfied.
+  \item Finally, consider that it has shape 
+    $\Gamma, x: \sigma \vdash \lambda y. M : \tau \rightarrow \tau'$ with 
+    $x \in FV(M)$ and $y \in FV(N)$ for a term $N$ such that 
+    $\Gamma \vdash N: \sigma$.
+
+    On the one hand, its ABS rule premise requires 
+    $\Gamma, x: \sigma, y: \tau \vdash M : \tau'$.
+
+    On the one hand, in this case 
+    $(\lambda y. M)[x \mapsto N] = \lambda z. M[y \mapsto z][x \mapsto N]$
+    where $z \notin FV(M) \cup FV(N)$.
+
+    As $z$ does not occur free neither in $M$ nor $N$, we can assign 
+    it type $\tau$ by keeping the consistency of 
+    the respective contexts obtaining the following type judgements
+    \footnote{Again, this claim, although simple, may require its own proof.}:
+
+    \begin{align*}
+      \Gamma, z: \tau &\vdash z: \tau \\
+      \Gamma, x: \sigma, y: \tau, z: \tau &\vdash M : \tau' \\
+      \Gamma, z: \tau &\vdash N: \sigma \\ 
+    \end{align*}
+    
+    By applying the induction hypothesis on the subterm $M$ 
+    for the first two judgements above, we have
+
+    $$
+    \Gamma, x: \sigma, z: \tau \vdash M[y \mapsto z] : \tau'
+    $$
+
+    and, by applying it again over $M[y \mapsto z]$ for this 
+    last judgement and the third one, we also have
+
+    $$
+    \Gamma, z: \tau \vdash M[y \mapsto z][x \mapsto N] : \tau'
+    $$
+
+    These reached type judgement satisfy the ABS rule leading to
+
+    \begin{align*}
+      \Gamma &\vdash \lambda z. M[y \mapsto z][x \mapsto N] : \tau \rightarrow \tau' \\
+      \Gamma &\vdash (\lambda y. M)[x \mapsto N] : \tau \rightarrow \tau'
+    \end{align*}
+
+    and therefore the property is satisfied.
+\end{itemize}
+
+\subsection{}\label{ex:7}
+
+Prove that if $M \leadsto^{*}_{\beta} M'$ and 
+$\Gamma \vdash M: \sigma$ then 
+$\Gamma \vdash M': \sigma$. Informally, this states that 
+$\beta$-reduction preserves types.
+
+We are going to prove the statement by induction on the length of the
+beta reduction chain.
+
+On the one hand, if its length is $0$ (i.e. $M \leadsto^{0}_{\beta} M'$),
+as no $\beta$-reduction has been performed, $M = M'$ and it is trivial that
+if $\Gamma \vdash M: \sigma$ then $\Gamma \vdash M: \sigma$.
+
+On the other hand, if the chain has length $k$ then 
+
+$$M \leadsto^{k - 1}_{\beta} M'' \leadsto_{\beta} M'$$
+
+for some lambda term $M''$. By induction hypothesis, if 
+$\Gamma \vdash M: \sigma$ then $\Gamma \vdash M'': \sigma$.
+
+For this last $\beta$-reduction to be possible, $M''$ has to be 
+of the shape $(\lambda x. X)\;N$ with $M' = X[x \mapsto N]$ and, 
+due to its type judgement stated above, it has a proof tree as 
+follows:
+
+\begin{mathpar}
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=ABS]{
+  \inferrule*{
+    \Delta_1
+  }{
+    \Gamma_1, x: \sigma' \vdash X: \sigma
+  }
+  }{
+    \Gamma_1 \vdash \lambda x. X: \sigma' \rightarrow \sigma
+  } \\
+  \inferrule*{
+    \Delta_2
+  }{
+    \Gamma_2 \vdash N: \sigma'
+  } 
+  }{
+    \Gamma_1 \cup \Gamma_2 \vdash (\lambda x. X)\;N:\sigma
+  }
+\end{mathpar}
+
+The bottomost few rules allow us to obtain the judgements
+$\Gamma_1, x: \sigma' \vdash X: \sigma$ and $\Gamma_2 \vdash N: \sigma'$ 
+independently of the proof trees $\Delta_1$ and $\Delta_2$
+and, as $\Gamma_1 \cup \Gamma_2$ must be consistent, it also implies that 
+the type judgements
+
+\begin{align*}
+  \Gamma_1 \cup \Gamma_2, x: \sigma' &\vdash X: \sigma \\
+  \Gamma_1 \cup \Gamma_2 &\vdash N: \sigma'
+\end{align*}
+
+also hold\footnote{
+  If $x: \sigma'$ were not consistent with $\Gamma_2$, we could 
+  have performed an $\alpha$-conversion to the abstraction 
+  $(\lambda x. X)$ in order to choose a bound variable which does 
+  not lead to this problem.
+}. Therefore, by the \ref{ex:6}, 
+$\Gamma_1 \cup \Gamma_2 \vdash X[x \mapsto N] : \sigma$, which is precisely
+$M$, the resulting term of $\beta$-reducing $M''$.
+
+\end{document}

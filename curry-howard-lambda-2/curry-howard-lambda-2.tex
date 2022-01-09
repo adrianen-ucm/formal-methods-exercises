@@ -1,0 +1,1544 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{mathpartir}
+
+\renewcommand{\thesubsection}{
+  Exercise \arabic{subsection}
+}
+
+\renewcommand{\thesubsubsection}{
+  Answer
+}
+
+\newenvironment{changemargin}[2]{%
+\begin{list}{}{%
+\setlength{\topsep}{0pt}%
+\setlength{\leftmargin}{#1}%
+\setlength{\rightmargin}{#2}%
+\setlength{\listparindent}{\parindent}%
+\setlength{\itemindent}{\parindent}%
+\setlength{\parsep}{\parskip}%
+}%
+\item[]}{\end{list}}
+
+\title{Curry-Howard/$\lambda 2$}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+\section*{The Curry-Howard isomorphism}
+
+\subsection{}\label{ex:1}
+
+Provide a $\lambda$-term equivalent to a proof in NJ of the
+following:
+
+$$
+  p 
+    \rightarrow (q \rightarrow r) 
+    \rightarrow ((p \rightarrow q) 
+    \rightarrow (p \rightarrow r))
+$$
+
+\subsubsection{}
+
+The term can be 
+
+$$
+  \lambda x. \lambda f. \lambda g. \lambda y. f\;(g\;x)
+$$
+
+and the proof tree for its proposed type is the following:
+
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    f : p \rightarrow r \vdash f: p \rightarrow r
+  } \\
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    g:p \rightarrow q \vdash g:p \rightarrow q
+  } \\ 
+  \inferrule*[Right=VAR]{\;}{
+    x:p \vdash x:p
+  }
+  }{
+    g:p \rightarrow q, x:p \vdash g\;x:p
+  }
+  }{
+    x: p, f: q \rightarrow r, g: p \rightarrow q, y: p 
+      \vdash 
+        f\;(g\;x): r
+  }
+  }{
+    x: p, f: q \rightarrow r, g: p \rightarrow q \vdash 
+      \lambda y.
+        f\;(g\;x): 
+    p \rightarrow r
+  }
+  }{
+    x: p, f: q \rightarrow r \vdash 
+      \lambda g. \lambda y.
+        f\;(g\;x): 
+    (p \rightarrow q) 
+    \rightarrow (p \rightarrow r)
+  }
+  }{
+    x: p \vdash 
+      \lambda f.\lambda g. \lambda y.
+        f\;(g\;x): 
+    (q \rightarrow r) 
+    \rightarrow ((p \rightarrow q) 
+    \rightarrow (p \rightarrow r))
+  }
+  }{
+    \vdash 
+      \lambda x. \lambda f.\lambda g. \lambda y.
+        f\;(g\;x): 
+    p 
+    \rightarrow (q \rightarrow r) 
+    \rightarrow ((p \rightarrow q) 
+    \rightarrow (p \rightarrow r))
+  }
+\end{mathpar}
+
+Here is also its proof in NJ, in order to show their
+analogy:
+
+\begin{mathpar}
+  \inferrule*[Right=$\rightarrow i^a$]{
+  \inferrule*[Right=$\rightarrow i^b$]{
+  \inferrule*[Right=$\rightarrow i^c$]{
+    \inferrule*[Right=$\rightarrow i^d$]{
+      \inferrule*[Right=$\rightarrow e$]{
+        [q \rightarrow r]^b
+        \\
+        \inferrule*[Right=$\rightarrow e$]{
+          \left[p \rightarrow q\right]^c 
+          \\ \left[p\right]^a
+        }{
+          q
+        }
+        }{
+          r
+        }
+      }{
+        p \rightarrow r
+      }
+    }{
+      (p \rightarrow q) 
+      \rightarrow (p \rightarrow r)
+    }
+  }{
+    (q \rightarrow r) 
+    \rightarrow ((p \rightarrow q) 
+    \rightarrow (p \rightarrow r))
+  }
+  }{
+    p 
+    \rightarrow (q \rightarrow r) 
+    \rightarrow ((p \rightarrow q) 
+    \rightarrow (p \rightarrow r))
+  }
+\end{mathpar}
+
+This can be checked in the Haskell REPL, for example, 
+by declaring the term with the type specified and 
+observing that it is accepted without no complain:
+
+\begin{verbatim}
+Prelude> :{
+  Prelude| term :: p -> (q -> r) -> ((p -> q) -> (p -> r))
+  Prelude| term = \x f g y -> f (g x)
+  Prelude| :}
+Prelude>
+\end{verbatim}
+
+\subsection{}\label{ex:2}
+
+Extend the Curry-Howard isomorphism to consider the 
+conjunction operator ($\land$). Define a translation
+of proofs in the subset of NJ with implication and 
+conjunction into extended $\lambda$-terms and provide 
+rules for $\beta$-reduction. Justify your decisions.
+
+\subsubsection{}
+
+On the one hand, we add the following to the syntax 
+of lambda terms:
+
+\begin{align*}
+  &\vdots\\
+  &|\;\langle T, T' \rangle\\
+  &|\;\pi^1\;T\\
+  &|\;\pi^2\;T\\
+\end{align*}
+
+which correspond to a pair term, and the first and second 
+component projections. The following $\beta$-reduction 
+rules are also added so we can effectively use these 
+projections:
+
+\begin{align*}
+  \pi^1\;\langle T, T' \rangle &\leadsto_\beta T\\
+  \pi^2\;\langle T, T' \rangle &\leadsto_\beta T'\\
+\end{align*}
+
+On the other hand, we add the following to the syntax 
+of types:
+
+\begin{align*}
+  &\vdots\\
+  &|\tau \times \tau'\\
+\end{align*}
+
+which corresponds to a product type and is intended to be
+the type for pair terms. We define the following typing rules 
+for these new terms:
+
+\begin{mathpar}
+  \inferrule*[Right=PROD]{
+    \Gamma \vdash T: \tau 
+    \\ 
+    \Gamma' \vdash T': \tau' 
+  }{
+    \Gamma \cup \Gamma' \vdash \langle T, T' \rangle 
+      : \tau \times \tau'
+  }
+\end{mathpar}
+
+\begin{minipage}[t][2cm][t]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=PROJ1]{
+    \Gamma \vdash T : \tau \times \tau'
+  }{
+    \Gamma \vdash \pi^1\;T : \tau
+  }
+\end{mathpar}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=PROJ2]{
+    \Gamma \vdash T : \tau \times \tau'
+  }{
+    \Gamma \vdash \pi^2\;T : \tau'
+  }
+\end{mathpar}
+\end{minipage}
+
+Finally, the traduction of proofs in the subset of NJ 
+to terms taking into account the conjunction operator 
+adds the following to the traduction that we already 
+have:
+
+\begin{minipage}[c][2cm][c]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=$\land i$]{
+    p \\ q
+  }{
+    p \land q
+  }
+\end{mathpar}
+\end{minipage}
+$\Longrightarrow$
+\begin{minipage}[c]{.4\textwidth}
+$$\langle P, Q \rangle$$
+\end{minipage}
+
+\begin{minipage}[c][2cm][c]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=$\land e_1$]{
+    p \land q
+  }{
+    p
+  }
+\end{mathpar}
+\end{minipage}
+$\Longrightarrow$
+\begin{minipage}[c]{.4\textwidth}
+$$\pi^1\;T$$
+\end{minipage}
+
+\begin{minipage}[c][2cm][c]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=$\land e_2$]{
+    p \land q
+  }{
+    q
+  }
+\end{mathpar}
+\end{minipage}
+$\Longrightarrow$
+\begin{minipage}[c]{.4\textwidth}
+$$\pi^2\;T$$
+\end{minipage}
+
+where $P$ is the term corresponding to the proof of $p$, 
+$Q$ is the term corresponding to the proof of $q$
+and $T$ is the term corresponding to the proof of 
+$p \land q$.
+
+\subsection{}\label{ex:3}
+
+Provide a type $\lambda$-term equivalent to a proof in 
+NJ of the following:
+
+$$(p \land q \land r) \rightarrow (p \land r)$$
+
+\subsubsection{}
+
+The required term can be
+
+$$
+  \lambda x. \langle \pi^1\;x, \pi^2\;(\pi^2\;x) \rangle
+$$
+
+and the proof tree for its proposed type is the following:
+
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=PROD]{
+  \inferrule*[Left=PROJ1]{
+  \inferrule*[Left=VAR]{\;}{
+    x: p \times q \times r 
+    \vdash 
+    x: p \times q \times r
+  }
+  }{
+    x: p \times q \times r \vdash 
+      \pi^1\;x: p
+  } \\
+  \inferrule*[Right=PROJ2]{
+  \inferrule*[Right=PROJ2]{
+  \inferrule*[Right=VAR]{\;}{
+    x: p \times q \times r
+    \vdash 
+    x: p \times q \times r
+  }
+  }{
+    x: p \times q \times r \vdash 
+      \pi^2\;x: q \times r
+  }
+  }{
+    x: p \times q \times r \vdash 
+      \pi^2\;(\pi^2\;x): r
+  }
+  }{
+    x: p \times q \times r \vdash 
+      \langle \pi^1\;x, \pi^2\;(\pi^2\;x) \rangle: 
+        p \times r
+  }
+  }{
+    \vdash 
+      \lambda x. \langle \pi^1\;x, \pi^2\;(\pi^2\;x) \rangle: 
+        (p \times q \times r) \rightarrow (p \times r)
+  }
+\end{mathpar}
+
+As in the \ref{ex:1}, we can check this with the Haskell REPL 
+by declaring the term with this specific type signature
+and observing that it is accepted with no complain:
+
+\begin{verbatim}
+Prelude> :{
+Prelude| term :: (p, (q, r)) -> (p, r)
+Prelude| term = \x -> (fst x, snd (snd x))
+Prelude| :}
+Prelude>
+\end{verbatim}
+
+\subsection{}\label{ex:4}
+
+Extend the Curry-Howard isomorphism to support disjunction
+($\lor$) analogously to the \ref{ex:2}.
+
+\subsubsection{}
+
+On the one hand, we add the following to the syntax 
+of lambda terms:
+
+\begin{align*}
+  &\vdots\\
+  &|\;\iota^1\;T\\
+  &|\;\iota^2\;T\\
+  &|\;\delta\;T_1\;T_2\;T\\
+\end{align*}
+
+which correspond to a left and right sum term, 
+and its eliminator. The following $\beta$-reduction 
+rules are also added so we can effectively use the 
+sum eliminator:
+
+\begin{align*}
+  \delta\;T_1\;T_2\;(\iota^1\;T) &\leadsto_\beta T_1\;T\\
+  \delta\;T_1\;T_2\;(\iota^2\;T) &\leadsto_\beta T_2\;T\\
+\end{align*}
+
+On the other hand, we add the following to the syntax of types:
+
+\begin{align*}
+  &\vdots\\
+  &|\tau + \tau'\\
+\end{align*}
+
+which corresponds to a sum type and is intended to be 
+the type for sum terms. We define the 
+following typing rules for these new terms:
+
+\begin{mathpar}
+  \inferrule*[Right=UNSUM]{
+    \Gamma_1 \vdash T_1: \tau \rightarrow \alpha
+    \\ 
+    \Gamma_2 \vdash T_2: \tau' \rightarrow \alpha
+    \\ 
+    \Gamma \vdash T: \tau + \tau'
+  }{
+    \Gamma_1 \cup \Gamma_2 \cup \Gamma \vdash 
+      \delta\;T_1\;T_2\;T : \alpha
+  }
+\end{mathpar}
+
+\begin{minipage}[t][2cm][t]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=SUML]{
+    \Gamma \vdash T : \tau
+  }{
+    \Gamma \vdash \iota^1\;T : \tau + \tau'
+  }
+\end{mathpar}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=SUMR]{
+    \Gamma \vdash T : \tau'
+  }{
+    \Gamma \vdash \iota^2\;T : \tau + \tau'
+  }
+\end{mathpar}
+\end{minipage}
+
+Finally, the traduction of proofs to terms in the subset 
+of NJ taking into account the disjunction operator adds 
+the following to the traduction that we already have:
+
+\begin{minipage}[c][2cm][c]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=$\lor e$]{
+    p \lor q \\ p \rightarrow e \\ q \rightarrow e
+  }{
+    r
+  }
+\end{mathpar}
+\end{minipage}
+$\Longrightarrow$
+\begin{minipage}[c]{.4\textwidth}
+$$\delta\;E_p\;E_q\;T$$
+\end{minipage}
+
+\begin{minipage}[c][2cm][c]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=$\lor i_1$]{
+    p
+  }{
+    p \lor q
+  }
+\end{mathpar}
+\end{minipage}
+$\Longrightarrow$
+\begin{minipage}[c]{.4\textwidth}
+$$\iota^1\;P$$
+\end{minipage}
+
+\begin{minipage}[c][2cm][c]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=$\lor i_2$]{
+    q
+  }{
+    p \lor q
+  }
+\end{mathpar}
+\end{minipage}
+$\Longrightarrow$
+\begin{minipage}[c]{.4\textwidth}
+$$\iota^2\;Q$$
+\end{minipage}
+
+where $P$ is the term corresponding to the proof of $p$, 
+$Q$ is the term corresponding to the proof of $q$,
+$T$ is the term corresponding to the proof of 
+$p \lor q$, $E_p$ is the proof of $p \rightarrow e$
+and $E_q$ is the proof of $q \rightarrow e$.
+
+\subsection{}\label{ex:5}
+
+Provide a $\lambda$-term equivalent to a proof in NJ of:
+
+$$p \rightarrow (p \land (p \lor q))$$
+
+\subsubsection{}
+
+The term can be
+
+$$
+  \lambda x. \langle x, \iota^1\;x \rangle
+$$
+
+and the proof tree for its proposed type is the following:
+
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=PROD]{
+  \inferrule*[Left=VAR]{\;}{
+    x: p \vdash x: p
+  } \\
+  \inferrule*[Right=SUML]{
+  \inferrule*[Right=VAR]{\;}{
+    x: p \vdash x: p
+  }
+  }{
+    \iota^1\;x: p + q
+  }
+  }{
+    x: p \vdash 
+      \langle x, \iota^1\;x \rangle: 
+      p \times (p + q)
+  }
+  }{
+    \vdash \lambda x. \langle x, \iota^1\;x \rangle: 
+      p \rightarrow (p \times (p + q))
+  }
+\end{mathpar}
+
+Again, we can check this in the Haskell REPL by 
+declaring this therm together with its type 
+signature, and observing that it is accepted:
+\begin{verbatim}
+Prelude> :{
+Prelude| term :: p -> (p, Either p q)
+Prelude| term = \x -> (x, Left x)
+Prelude| :}
+Prelude>
+\end{verbatim}
+
+\section*{The polymorphic $\lambda$-calculus}
+
+\subsection{}\label{ex:6}
+
+Provide a polymorphic definition of function composition
+(Exercise 10 in the previous exercise sheet) in $\lambda 2$.
+Use it to provide an alternate \textit{cheap} definition for 
+the Church numerals $\mathsf{2}, \mathsf{3}$, 
+and $\mathsf{4}$. Verify your answer via reduction.
+
+\subsubsection{}
+
+The term is 
+
+$$
+\mathsf{COMP} \triangleq
+  \Lambda a. \Lambda b. \Lambda c. 
+    \lambda f^{b \rightarrow c}.
+    \lambda g^{a \rightarrow b}.
+    \lambda x^a.
+      f\;(g\;x)
+$$
+
+and its proof tree is as follows:
+
+\begin{mathpar}
+  \inferrule*[Right=$\forall i$]{
+  \inferrule*[Right=$\forall i$]{
+  \inferrule*[Right=$\forall i$]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    f : b \rightarrow c \vdash f: b \rightarrow c
+  } \\
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=VAR]{\;}{
+    g:a \rightarrow b \vdash g:a \rightarrow b
+  } \\
+  \inferrule*[Right=VAR]{\;}{
+    x:a \vdash x:a
+  }
+  }{
+    g:a \rightarrow b, x:a \vdash g\;x:b
+  }
+  }{
+      f:b \rightarrow c, g:a \rightarrow b, x:a
+      \vdash
+      f\;(g\;x):c
+  }
+  }{
+    f:b \rightarrow c, g:a \rightarrow b \vdash
+      \lambda x^a.
+        f\;(g\;x):
+      a \rightarrow c
+  }
+  }{
+    f:b \rightarrow c \vdash
+      \lambda g^{a \rightarrow b}. 
+      \lambda x^a.
+        f\;(g\;x):
+      (a \rightarrow b) \rightarrow
+      (a \rightarrow c)
+  }
+  }{
+    \vdash 
+      \lambda f^{b \rightarrow c}.
+      \lambda g^{a \rightarrow b}. 
+      \lambda x^a.
+        f\;(g\;x):
+      (b \rightarrow c) \rightarrow
+      (a \rightarrow b) \rightarrow
+      (a \rightarrow c)
+  }
+  }{
+    \vdash \Lambda c. 
+      \lambda f^{b \rightarrow c}.
+      \lambda g^{a \rightarrow b}. 
+      \lambda x^a.
+        f\;(g\;x): \forall c.
+      (b \rightarrow c) \rightarrow
+      (a \rightarrow b) \rightarrow
+      (a \rightarrow c)
+  }
+  }{
+    \vdash \Lambda b. \Lambda c. 
+      \lambda f^{b \rightarrow c}.
+      \lambda g^{a \rightarrow b}. 
+      \lambda x^a.
+        f\;(g\;x): \forall b.\forall c.
+      (b \rightarrow c) \rightarrow
+      (a \rightarrow b) \rightarrow
+      (a \rightarrow c)
+  }
+  }{
+    \vdash \Lambda a. \Lambda b. \Lambda c. 
+      \lambda f^{b \rightarrow c}.
+      \lambda g^{a \rightarrow b}. 
+      \lambda x^a.
+        f\;(g\;x): \forall a.\forall b.\forall c.
+      (b \rightarrow c) \rightarrow
+      (a \rightarrow b) \rightarrow
+      (a \rightarrow c)
+  }
+\end{mathpar}
+
+By having $\mathsf{1}$ defined as $\Lambda t. \lambda 
+f^{t \rightarrow t}. \lambda x^t. f\;x$, we can, for 
+example, define the following numbers as
+
+\begin{align*}
+  \mathsf{2} &\triangleq \Lambda t.
+    \lambda f^{t \rightarrow t}.
+      \mathsf{COMP}[t][t][t]\;
+      (\mathsf{1}[t]\;f)\;
+      (\mathsf{1}[t]\;f) \\
+  \mathsf{3} &\triangleq \Lambda t.
+    \lambda f^{t \rightarrow t}.
+      \mathsf{COMP}[t][t][t]\;
+      (\mathsf{1}[t]\;f)\;
+      (\mathsf{2}[t]\;f) \\
+  \mathsf{4} &\triangleq \Lambda t.
+    \lambda f^{t \rightarrow t}.
+      \mathsf{COMP}[t][t][t]\;
+      (\mathsf{2}[t]\;f)\;
+      (\mathsf{2}[t]\;f) \\
+\end{align*}
+
+First, this shows how the defined term $\mathsf{2}$ 
+reduces as expected:
+
+\begingroup
+\allowdisplaybreaks
+\begin{align*}
+  \mathsf{2} 
+    \equiv&
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \mathsf{COMP}[t][t][t]\;
+        (\mathsf{1}[t]\;f)\;
+        (\mathsf{1}[t]\;f) \\
+    \equiv&
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \\&\;\;\;\;\;\;\;\;(\Lambda a. \Lambda b. \Lambda c. 
+        \lambda f^{b \rightarrow c}.
+        \lambda g^{a \rightarrow b}.
+        \lambda x^a.
+          f\;(g\;x))[t][t][t]\;
+        \\&\;\;\;\;\;\;\;\;((
+          \Lambda t. \lambda f^{t \rightarrow t}. \lambda x^t. f\;x
+          )[t]\;f)\;
+        \\&\;\;\;\;\;\;\;\;((\Lambda t. \lambda f^{t \rightarrow t}. \lambda x^t. f\;x)[t]\;f) \\
+    \leadsto^{5}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \\&\;\;\;\;\;\;\;\;(
+        \lambda f^{t \rightarrow t}.
+        \lambda g^{t \rightarrow t}.
+        \lambda x^t.
+          f\;(g\;x))\;
+        \\&\;\;\;\;\;\;\;\;((
+          \lambda f^{t \rightarrow t}. \lambda x^t. f\;x
+          )\;f)\;
+        \\&\;\;\;\;\;\;\;\;((\lambda f^{t \rightarrow t}. 
+          \lambda x^t. f\;x)\;f) \\
+    \leadsto^{2}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        (
+        \lambda f^{t \rightarrow t}.
+        \lambda g^{t \rightarrow t}.
+        \lambda x^t.
+          f\;(g\;x))\;
+        \;(\lambda x^t. f\;x)
+        \;(\lambda x^t. f\;x) \\
+    \leadsto^{2}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t.
+        (\lambda x^t. f\;x)\;((\lambda x^t. f\;x)\;x)
+      \\
+    \leadsto& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t.
+        (\lambda x^t. f\;x)\;(f\;x)
+      \\
+    \leadsto& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t. f\;(f\;x)
+      \\
+\end{align*}
+\endgroup
+
+Second, this shows how the defined $\mathsf{3}$ 
+reduces to the expected term by also using the previous 
+reduction for $\mathsf{2}$:
+
+\begingroup
+\allowdisplaybreaks
+\begin{align*}
+  \mathsf{3} 
+    \equiv&
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \mathsf{COMP}[t][t][t]\;
+        (\mathsf{1}[t]\;f)\;
+        (\mathsf{2}[t]\;f) \\
+    \equiv&
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \\&\;\;\;\;\;\;\;\;(\Lambda a. \Lambda b. \Lambda c. 
+        \lambda f^{b \rightarrow c}.
+        \lambda g^{a \rightarrow b}.
+        \lambda x^a.
+          f\;(g\;x))[t][t][t]\;
+        \\&\;\;\;\;\;\;\;\;((
+          \Lambda t. \lambda f^{t \rightarrow t}. \lambda x^t. f\;x
+          )[t]\;f)\;
+        \\&\;\;\;\;\;\;\;\;(\mathsf{2}[t]\;f) \\
+    \leadsto^{*}&
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \\&\;\;\;\;\;\;\;\;(\Lambda a. \Lambda b. \Lambda c. 
+        \lambda f^{b \rightarrow c}.
+        \lambda g^{a \rightarrow b}.
+        \lambda x^a.
+          f\;(g\;x))[t][t][t]\;
+        \\&\;\;\;\;\;\;\;\;((
+          \Lambda t. \lambda f^{t \rightarrow t}. \lambda x^t. f\;x
+          )[t]\;f)\;
+        \\&\;\;\;\;\;\;\;\;((
+          \Lambda t. \lambda f^{t \rightarrow t}. \lambda x^t. 
+            f\;(f\;x))[t]\;f) \\
+    \leadsto^{5}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \\&\;\;\;\;\;\;\;\;(
+        \lambda f^{t \rightarrow t}.
+        \lambda g^{t \rightarrow t}.
+        \lambda x^t.
+          f\;(g\;x))\;
+        \\&\;\;\;\;\;\;\;\;((\lambda f^{t \rightarrow t}. 
+          \lambda x^t. f\;x)\;f)\;
+        \\&\;\;\;\;\;\;\;\;((\lambda f^{t \rightarrow t}. 
+          \lambda x^t. f\;(f\;x))\;f) \\
+    \leadsto^{2}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        (
+        \lambda f^{t \rightarrow t}.
+        \lambda g^{t \rightarrow t}.
+        \lambda x^t.
+          f\;(g\;x))\;
+        \;(\lambda x^t. f\;x)
+        \;(\lambda x^t. f\;(f\;x)) \\
+    \leadsto^{2}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t.
+        (\lambda x^t. f\;x)\;((\lambda x^t. f\;(f\;x))\;x)
+      \\
+    \leadsto& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t.
+        (\lambda x^t. f\;x)\;(f\;(f\;x))
+      \\
+    \leadsto& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t. f\;(f\;(f\;x))
+      \\
+\end{align*}
+\endgroup
+
+Finally, this shows how the defined $\mathsf{4}$ 
+also reduces to the expected term by also using the previous 
+reduction for $\mathsf{2}$:
+
+\begingroup
+\allowdisplaybreaks
+\begin{align*}
+  \mathsf{4} 
+    \equiv&
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \mathsf{COMP}[t][t][t]\;
+        (\mathsf{2}[t]\;f)\;
+        (\mathsf{2}[t]\;f) \\
+    \equiv&
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \\&\;\;\;\;\;\;\;\;(\Lambda a. \Lambda b. \Lambda c. 
+        \lambda f^{b \rightarrow c}.
+        \lambda g^{a \rightarrow b}.
+        \lambda x^a.
+          f\;(g\;x))[t][t][t]\;
+        \\&\;\;\;\;\;\;\;\;(\mathsf{2}[t]\;f)\;
+        \\&\;\;\;\;\;\;\;\;(\mathsf{2}[t]\;f) \\
+    \leadsto^{*}&
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \\&\;\;\;\;\;\;\;\;(\Lambda a. \Lambda b. \Lambda c. 
+        \lambda f^{b \rightarrow c}.
+        \lambda g^{a \rightarrow b}.
+        \lambda x^a.
+          f\;(g\;x))[t][t][t]\;
+        \\&\;\;\;\;\;\;\;\;((
+          \Lambda t. \lambda f^{t \rightarrow t}. \lambda 
+            x^t. f\;(f\;x))[t]\;f)\;
+        \\&\;\;\;\;\;\;\;\;((
+          \Lambda t. \lambda f^{t \rightarrow t}. \lambda 
+            x^t. f\;(f\;x))[t]\;f) \\
+    \leadsto^{5}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \\&\;\;\;\;\;\;\;\;(
+        \lambda f^{t \rightarrow t}.
+        \lambda g^{t \rightarrow t}.
+        \lambda x^t.
+          f\;(g\;x))\;
+        \\&\;\;\;\;\;\;\;\;((
+          \lambda f^{t \rightarrow t}. \lambda 
+            x^t. f\;(f\;x))\;f)\;
+        \\&\;\;\;\;\;\;\;\;((
+          \lambda f^{t \rightarrow t}. \lambda 
+            x^t. f\;(f\;x))\;f) \\
+    \leadsto^{2}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        (
+        \lambda f^{t \rightarrow t}.
+        \lambda g^{t \rightarrow t}.
+        \lambda x^t.
+          f\;(g\;x))\;
+        \;(\lambda x^t. f\;(f\;x))
+        \;(\lambda x^t. f\;(f\;x)) \\
+    \leadsto^{2}& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t.
+        (\lambda x^t. f\;(f\;x))\;
+          ((\lambda x^t. f\;(f\;x))\;x)
+      \\
+    \leadsto& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t.
+        (\lambda x^t. f\;(f\;x))\;(f\;(f\;x))
+      \\
+    \leadsto& 
+      \Lambda t.
+      \lambda f^{t \rightarrow t}.
+        \lambda x^t. f\;(f\;(f\;(f\;x)))
+      \\
+\end{align*}
+\endgroup
+
+\subsection{}\label{ex:7}
+
+Revisit Church booleans in $\lambda 2$ (Exercise 5 of the
+previous sheet). Use reduction to check the correctness
+of your definitions (i.e. of the type \textit{bool} and the
+terms $\mathsf{TRUE}, \mathsf{FALSE}, \mathsf{NEG}, 
+\mathsf{CONJ}$ and $\textsf{DISJ}$).
+
+\subsubsection{}
+
+The type \textit{bool} is defined as 
+
+$$
+\textit{bool} = \forall t. t \rightarrow t \rightarrow t
+$$
+
+and the terms $\mathsf{TRUE}$ and $\mathsf{FALSE}$ as
+
+\begin{align*}
+  \mathsf{TRUE} &\triangleq 
+    \Lambda t. \lambda x^t. \lambda y^t. x \\
+  \mathsf{FALSE} &\triangleq 
+    \Lambda t. \lambda x^t. \lambda y^t. y \\
+\end{align*}
+
+whose proof for its \textit{bool} type assignment is 
+the following, from left to right:
+
+\begin{minipage}[t][3.3cm][t]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=$\forall i$]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=VAR]{\;}{
+    x:t,y:t\vdash x:t
+  }
+  }{
+    x:t\vdash \lambda y^t.x:
+      t \rightarrow t
+  } 
+  }{
+    \vdash \lambda x^t.\lambda y^t.x:
+      t \rightarrow t \rightarrow t
+  }
+  }{
+    \vdash \Lambda t. \lambda x^t.\lambda y^t.x:
+      \forall t. t \rightarrow t \rightarrow t
+  }
+\end{mathpar}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.4\textwidth}
+\begin{mathpar}
+  \inferrule*[Right=$\forall i$]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=VAR]{\;}{
+    x:t,y:t\vdash y:t
+  }
+  }{
+    x:t\vdash \lambda y^t.y:
+      t \rightarrow t
+  } 
+  }{
+    \vdash \lambda x^t.\lambda y^t.y:
+      t \rightarrow t \rightarrow t
+  }
+  }{
+    \vdash \Lambda t. \lambda x^t.\lambda y^t.y:
+      \forall t. t \rightarrow t \rightarrow t
+  }
+\end{mathpar}
+\end{minipage}
+
+The term $\mathsf{NOT}$ can be defined as
+
+$$
+\lambda b^\textit{bool}.\Lambda t. \lambda x^t.\lambda y^t.
+  b[t]\;y\;x
+$$
+
+On the one hand, its proof to be assigned type 
+$\textit{bool} \rightarrow \textit{bool}$
+is as follows:
+
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=$\forall i$]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=APP]{
+  \inferrule*[Left=$\forall e$]{
+  \inferrule*[Left=VAR]{\;}{
+    b:\forall t. t \rightarrow t \rightarrow t
+    \vdash 
+    b:\forall t. t \rightarrow t \rightarrow t
+  }
+  }{
+    b:\forall t. t \rightarrow t \rightarrow t
+    \vdash 
+    b[t]:t \rightarrow t \rightarrow t
+  } \\
+  \inferrule*[Right=VAR]{\;}{
+    y:t \vdash y:t
+  } 
+  }{
+    b:\forall t. t \rightarrow t \rightarrow t,
+    y:t
+    \vdash 
+    b[t]\;y: t \rightarrow t 
+  } \\ 
+  \inferrule*[Right=VAR]{\;}{
+    x:t \vdash x:t
+  }
+  }{
+    b:\forall t. t \rightarrow t \rightarrow t, 
+    x: t, y: t \vdash
+      b[t]\;y\;x: t
+  }
+  }{
+    b:\forall t. t \rightarrow t \rightarrow t, 
+    x: t \vdash
+      \lambda y^t. b[t]\;y\;x: 
+        t \rightarrow t
+  }
+  }{
+    b:\forall t. t \rightarrow t \rightarrow t \vdash 
+      \lambda x^t.
+      \lambda y^t. b[t]\;y\;x:
+        t \rightarrow t \rightarrow t
+  }
+  }{
+    b:\forall t. t \rightarrow t \rightarrow t \vdash 
+    \Lambda t.
+    \lambda x^t.
+    \lambda y^t. b[t]\;y\;x:
+      \forall t. t \rightarrow t \rightarrow t
+  } 
+  }{
+    \vdash 
+      \lambda b^{\forall t. t \rightarrow t \rightarrow t}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+        b[t]\;y\;x:
+      (\forall t. t \rightarrow t \rightarrow t) 
+      \rightarrow 
+      (\forall t. t \rightarrow t \rightarrow t)
+  }
+\end{mathpar}
+
+On the other hand, its behavior is the following:
+
+\begin{align*}
+  \mathsf{NEG}\;\mathsf{TRUE} & \\
+    \equiv&
+      (\lambda b^{\forall t. t \rightarrow t \rightarrow t}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+        b[t]\;y\;x
+      )\;
+      (\Lambda t. \lambda x^t. \lambda y^t. x) \\
+    \leadsto&
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+        (\Lambda t. \lambda x^t. \lambda y^t. x)[t]\;y\;x \\
+    \leadsto&
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\lambda x^t. \lambda y^t. x)\;y\;x \\
+    \leadsto&
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t. y \\
+    \equiv& \mathsf{FALSE}
+\end{align*}
+
+\begin{align*}
+  \mathsf{NEG}\;\mathsf{FALSE} & \\
+    \equiv&
+      (\lambda b^{\forall t. t \rightarrow t \rightarrow t}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+        b[t]\;y\;x
+      )\;
+      (\Lambda t. \lambda x^t. \lambda y^t. y) \\
+    \leadsto&
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+        (\Lambda t. \lambda x^t. \lambda y^t. y)[t]\;y\;x \\
+    \leadsto&
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\lambda x^t. \lambda y^t. y)\;y\;x \\
+    \leadsto&
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t. x \\
+    \equiv& \mathsf{TRUE}
+\end{align*}
+
+The term $\mathsf{CONJ}$ can be defined as
+
+$$
+\lambda b^\textit{bool}. \lambda c^\textit{bool}.
+  \Lambda t. \lambda x^t.\lambda y^t.
+  b[t]\;(c[t]\;x\;y)\;y
+$$
+
+On the one hand, its proof to be assigned type 
+$\textit{bool} \rightarrow \textit{bool}
+\rightarrow \textit{bool}$ is as follows:
+
+\begin{changemargin}{-2cm}{-2cm}
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=$\forall i$]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=APP]{
+  \inferrule*[Left=$\forall e$]{
+  \inferrule*[Left=VAR]{\;}{
+    b:\textit{bool} \vdash b:\textit{bool}
+  }
+  }{
+    b:\textit{bool}
+    \vdash
+    b[t]:t \rightarrow t \rightarrow t
+  } \\ 
+  \Delta_1
+  }{
+    b: \textit{bool},
+    c: \textit{bool},
+    x: t,
+    y: t
+    \vdash
+    b\;(c\;x\;y):t\rightarrow t
+  } \\
+  \inferrule*[Right=VAR]{\;}{
+    y:t
+    \vdash
+    y:t
+  }
+  }{
+    b: \textit{bool}, c: \textit{bool}, x: t, y: t \vdash 
+      b[t]\;(c[t]\;x\;y)\;y: t
+  }
+  }{
+    b: \textit{bool}, c: \textit{bool}, x: t \vdash 
+      \lambda y^t.
+      b[t]\;(c[t]\;x\;y)\;y: t \rightarrow t
+  }
+  }{
+    b: \textit{bool}, c: \textit{bool} \vdash 
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;(c[t]\;x\;y)\;y:
+        t \rightarrow t \rightarrow t
+  }
+  }{
+    b: \textit{bool}, c: \textit{bool} \vdash 
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;(c[t]\;x\;y)\;y:
+      \textit{bool}
+  }
+  }{
+    b: \textit{bool} \vdash 
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;(c[t]\;x\;y)\;y:
+      \textit{bool} \rightarrow
+      \textit{bool}
+  } 
+  }{
+    \vdash 
+      \lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;(c[t]\;x\;y)\;y:
+      \textit{bool} \rightarrow
+      \textit{bool} \rightarrow
+      \textit{bool}
+  }
+\end{mathpar}
+\end{changemargin}
+
+where the subtree $\Delta_1$ is the following:
+
+\begin{mathpar}
+\inferrule*[Right=APP]{
+\inferrule*[Left=APP]{
+\inferrule*[Left=$\forall e$]{
+\inferrule*[Left=VAR]{\;}{
+  c: \textit{bool}
+  \vdash 
+  c: \textit{bool}
+}
+}{
+  c: \textit{bool}
+  \vdash 
+  c[t]: t \rightarrow t \rightarrow t
+} \\ 
+\inferrule*[Left=VAR]{\;}{
+  x:t
+  \vdash 
+  x:t
+}
+}{
+  c: \textit{bool},
+  x: t
+  \vdash
+  c[t]\;x:t \rightarrow t
+} \\
+\inferrule*[Left=VAR]{\;}{
+  y:t
+  \vdash
+  y:t
+}
+}{
+  c: \textit{bool},
+  x: t,
+  y: t
+  \vdash
+  c[t]\;x\;y:t
+}
+\end{mathpar}
+
+On the other hand, its behavior is the following:
+
+\begin{align*}
+  \mathsf{CONJ}\;\mathsf{FALSE} & \\
+    \equiv&
+      (\lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;(c[t]\;x\;y)\;y)\;
+      (\Lambda t. \lambda x^t.\lambda y^t.y) \\
+    \leadsto&
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\Lambda t. \lambda x^t.\lambda y^t.y)[t]\;(c[t]\;x\;y)\;y \\
+    \leadsto&
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\lambda x^t.\lambda y^t.y)\;(c[t]\;x\;y)\;y \\
+    \leadsto^{2}&
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      y \\
+    \equiv&
+      \lambda c^\textit{bool}.\mathsf{FALSE}
+\end{align*}
+
+\begin{align*}
+  \mathsf{CONJ}\;\mathsf{TRUE} & \\
+    \equiv&
+      (\lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;(c[t]\;x\;y)\;y)\;
+      (\Lambda t. \lambda x^t.\lambda y^t.x) \\
+    \leadsto&
+      \lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\Lambda t. \lambda x^t.\lambda y^t.x)[t]\;(c[t]\;x\;y)\;y \\
+    \leadsto&
+      \lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\lambda x^t.\lambda y^t.x)\;(c[t]\;x\;y)\;y \\
+    \leadsto^{2}&
+      \lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      c[t]\;x\;y \\
+    \rightsquigarrow_\eta^2&
+      \lambda c^\textit{bool}.
+      \Lambda t. c[t]
+\end{align*}
+
+The reduction for $\mathsf{CONJ}\;\mathsf{TRUE}$ shows that 
+it will reduce to the same \textit{bool} term that can 
+be applied to it, although we cannot reduce it more unless 
+we apply the remaining parameter. Maybe a similar reduction 
+rule as the known $\eta$-reduction for terms can be defined 
+for type abstractions and applications.
+
+The term $\mathsf{DISJ}$ can be defined as
+
+$$
+\lambda b^\textit{bool}. \lambda c^\textit{bool}.
+  \Lambda t. \lambda x^t.\lambda y^t.
+  b[t]\;x\;(c[t]\;x\;y)
+$$
+
+On the one hand, its proof to be assigned type 
+$\textit{bool} \rightarrow \textit{bool}
+\rightarrow \textit{bool}$ is as follows:
+
+\begin{changemargin}{-2cm}{-2cm}
+\begin{mathpar}
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=$\forall i$]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=ABS]{
+  \inferrule*[Right=APP]{
+  \Delta_2
+  \\
+  \inferrule*[Right=APP]{
+  \inferrule*[Right=APP]{
+  \inferrule*[Left=$\forall e$]{
+  \inferrule*[Left=VAR]{\;}{
+    c: \textit{bool} \vdash c: \textit{bool}
+  }
+  }{
+    c: \textit{bool}
+    \vdash
+    c[t]: t \rightarrow t \rightarrow t
+  } \\ 
+  \inferrule*[Left=VAR]{\;}{
+    x:t
+    \vdash
+    x:t
+  }
+  }{
+    c: \textit{bool},
+    x: t
+    \vdash
+    c[t]\;x:t \rightarrow t
+  } \\
+  \inferrule*[Right=VAR]{\;}{
+    y:d
+    \vdash
+    y:d
+  }
+  }{
+    c: \textit{bool},
+    x: t,
+    y: t
+    \vdash
+    c[t]\;x\;y:t
+  }
+  }{
+    b: \textit{bool}, c: \textit{bool}, x: t, y: t \vdash
+      b[t]\;x\;(c[t]\;x\;y): t
+  }
+  }{
+    b: \textit{bool}, c: \textit{bool}, x: t \vdash
+      \lambda y^t.
+      b[t]\;x\;(c[t]\;x\;y):
+      t \rightarrow t
+  }
+  }{
+    b: \textit{bool}, c: \textit{bool} \vdash
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;x\;(c[t]\;x\;y):
+      t \rightarrow t \rightarrow t
+  }
+  }{
+    b: \textit{bool}, c: \textit{bool} \vdash
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;x\;(c[t]\;x\;y):
+      \textit{bool}
+  }
+  }{
+    b: \textit{bool} \vdash
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;x\;(c[t]\;x\;y):
+      \textit{bool} \rightarrow
+      \textit{bool}
+  } 
+  }{
+    \vdash 
+      \lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;x\;(c[t]\;x\;y):
+      \textit{bool} \rightarrow
+      \textit{bool} \rightarrow
+      \textit{bool}
+  }
+\end{mathpar}
+\end{changemargin}
+
+where the subtree $\Delta_2$ is the following:
+
+\begin{mathpar}
+\inferrule*[Left=APP]{
+\inferrule*[Left=$\forall e$]{
+\inferrule*[Left=VAR]{\;}{
+  b: \textit{bool} \vdash b: \textit{bool}
+}
+}{
+  b: \textit{bool}
+  \vdash
+  b[t]:t \rightarrow t \rightarrow t
+} \\
+\inferrule*[Left=VAR]{\;}{
+  x:t
+  \vdash
+  x:t
+} \\
+}{
+  b: \textit{bool},
+  x: t
+  \vdash
+  b[t]\;x: t \rightarrow t
+}
+\end{mathpar}
+
+On the other hand, its behavior is the following:
+
+\begin{align*}
+  \mathsf{DISJ}\;\mathsf{TRUE} & \\
+    \equiv&
+      (\lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;x\;(c[t]\;x\;y)\;
+      (\Lambda t. \lambda x^t.\lambda y^t.x) \\
+    \leadsto&
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\Lambda t. \lambda x^t.\lambda y^t.x)[t]\;x\;(c[t]\;x\;y) \\
+    \leadsto&
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\lambda x^t.\lambda y^t.x)\;x\;(c[t]\;x\;y) \\
+    \leadsto^{2}&
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      x \\
+    \equiv&
+      \lambda c^\textit{bool}.\mathsf{TRUE}
+\end{align*}
+
+\begin{align*}
+  \mathsf{DISJ}\;\mathsf{FALSE} & \\
+    \equiv&
+      (\lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      b[t]\;x\;(c[t]\;x\;y)\;
+      (\Lambda t. \lambda x^t.\lambda y^t.y) \\
+    \leadsto&
+      \lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\Lambda t. \lambda x^t.\lambda y^t.y)[t]\;x\;(c[t]\;x\;y) \\
+    \leadsto&
+      \lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      (\lambda x^t.\lambda y^t.y)\;x\;(c[t]\;x\;y) \\
+    \leadsto^{2}&
+      \lambda b^\textit{bool}.
+      \lambda c^\textit{bool}.
+      \Lambda t.
+      \lambda x^t.
+      \lambda y^t.
+      c[t]\;x\;y \\
+    \rightsquigarrow_\eta^2&
+      \lambda c^\textit{bool}.
+      \Lambda t. c[t]
+\end{align*}
+
+As mentioned in the $\mathsf{CONJ}\;\mathsf{TRUE}$ reduction,
+this last one will reduce to the same \textit{bool} term 
+that can be applied to it, but it could be seen more clearly 
+if we had a new rule of $\eta$-reduction for type 
+abstractions and applications.
+
+\subsection{}\label{ex:8}
+
+Implement the two previous exercises in Haskell using the 
+extension for \textit{rank n polymorphic types}. 
+
+\subsubsection{}
+
+The implementation is provided as a Haskell project
+managed with Cabal within the folder \verb|church-encodings|.
+
+Although it contains implementations for booleans, numerals, 
+pairs and lists, the ones of interest for this exercise 
+correspond to the modules \verb|Encoding.BoolChurch|
+and \verb|Encoding.NatChurch|.
+
+A test suite is also available, which can be executed with the 
+script \verb|test.sh| as follows:
+
+\begin{verbatim}
+chmod u+x test.sh && ./test.sh
+\end{verbatim}
+
+\end{document}

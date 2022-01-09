@@ -1,0 +1,299 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage[shortlabels]{enumitem}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\usepackage{fancyvrb}
+
+\title{Assignment 4 on Program Semantics}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+Given the function $F: 
+  \left(
+    \textbf{State} \rightarrow \textbf{State}_\bot
+  \right) 
+  \rightarrow 
+  \left(
+    \textbf{State} \rightarrow \textbf{State}_\bot
+  \right)
+$ defined as follows:
+
+$$
+F(f) = cond
+  \left(
+    \mathcal{B}\llbracket n > 0\rrbracket,
+    f \circ \mathcal{S} 
+      \llbracket 
+        x := 2 * x; \; n := n - 1
+      \rrbracket,
+    id
+  \right)
+$$
+
+\begin{enumerate}[(a)]
+  \item Give an explicit definition for 
+    $F\left(\lambda\sigma.\bot\right)$,
+    $F^2\left(\lambda\sigma.\bot\right)$
+    and $F^3\left(\lambda\sigma.\bot\right)$.
+
+    For the first application of $F$, as any function 
+    right-composed with $\lambda\sigma.\bot$ is the same
+    as $\lambda\sigma.\bot$, we have
+
+    $$F\left(\lambda\sigma.\bot\right) 
+      = \lambda\sigma.\begin{cases}
+        \bot & \text{if } \sigma(n) > 0 \\
+        \sigma & \text{if } \sigma(n) \leq 0
+      \end{cases}
+    $$
+
+    For its second application,
+    let $g: \textbf{State} \rightarrow \textbf{State}$ 
+    be the function 
+
+    \begin{align*}
+      g &= S
+      \llbracket
+        x := 2 * x; \; n := n - 1 
+      \rrbracket \\ &=
+      \lambda \sigma. \sigma
+        \left[
+          x \mapsto 2 \cdot \sigma(x),
+          n \mapsto \sigma(n) - 1
+        \right]
+    \end{align*}
+
+    As it subtracts $1$ to $n$, by matching the 
+    corresponding cases of $F(\lambda\sigma.\bot)$ 
+    after applying $g$, 
+    we have
+
+    $$F(\lambda\sigma.\bot) \circ g =
+      \lambda\sigma. \begin{cases}
+        \bot & \text{if } \sigma(n) > 1 \\ 
+        g(\sigma) & \text{if } \sigma(n) \leq 1
+      \end{cases}
+    $$
+
+    which, once the case of $n \leq 0$ is absorbed by
+    $cond$, becomes into
+
+    $$F^2\left(\lambda\sigma.\bot\right) 
+      = \lambda\sigma.\begin{cases}
+        \bot & \text{if } \sigma(n) > 1 \\
+        \sigma
+          \left[
+            x \mapsto 2 \cdot \sigma(x),
+            n \mapsto 0
+          \right] & \text{if } \sigma(n) = 1 \\
+        \sigma & \text{if } \sigma(n) \leq 0
+      \end{cases}
+    $$
+
+    In a similar way, as 
+
+    $$F^2(\lambda\sigma.\bot) \circ g =
+      \lambda\sigma. \begin{cases}
+        \bot & \text{if } \sigma(n) > 2 \\ 
+        g(g(\sigma)) & \text{if } \sigma(n) = 2 \\
+        g(\sigma) & \text{if } \sigma(n) \leq 1 \\
+      \end{cases}
+    $$
+
+    we reach the next power of $F$:
+
+    $$F^3\left(\lambda\sigma.\bot\right) 
+      = \lambda\sigma.\begin{cases}
+        \bot & \text{if } \sigma(n) > 2 \\
+        \sigma
+          \left[
+            x \mapsto 4 \cdot \sigma(x),
+            n \mapsto 0
+          \right] & \text{if } \sigma(n) = 2 \\
+        \sigma
+          \left[
+            x \mapsto 2 \cdot \sigma(x),
+            n \mapsto 0
+          \right] & \text{if } \sigma(n) = 1 \\
+        \sigma & \text{if } \sigma(n) \leq 0
+      \end{cases}
+    $$
+
+  \item From the results above, conjecture a general defintion for 
+    $F^i\left(\lambda\sigma.\bot\right)$ where $i \geq 1$.
+    [Optional] Prove by induction on $i$ that your conjecture is 
+    correct.
+
+    Our conjecture is the following:
+
+    $$F^i\left(\lambda\sigma.\bot\right) 
+      = \lambda\sigma.\begin{cases}
+        \bot & \text{if } \sigma(n) \geq i \\
+        g^{\sigma(n)}(\sigma) & \text{if } 0 < \sigma(n) < i \\
+        \sigma & \text{if } \sigma(n) \leq 0
+      \end{cases}
+    $$
+
+    where $g^j (\sigma) = \sigma
+      \left[
+        x \mapsto 2^j \cdot \sigma(x),
+        n \mapsto \sigma(n) - j
+      \right]
+    $. Note that when $j = \sigma(n)$ it yields $ 
+      \sigma\left[
+        x \mapsto 2^j \cdot \sigma(x),
+        n \mapsto 0
+      \right]
+    $, but we have written it in a more general way for the
+    ease of the following proof. 
+
+    It has been shown to hold when $i = 1$ (i.e. recall 
+    $F\left(\lambda\sigma.\bot\right)$ from the previous
+    section). For proceeding with the inductive proof, 
+    suppose that it holds for some $i$, then
+    
+    $$F^i\left(\lambda\sigma.\bot\right) \circ g
+      = \lambda\sigma.\begin{cases}
+        \bot & \text{if } \sigma(n) \geq i + 1 \\
+        g^{\sigma(n) - 1}(g(\sigma)) & \text{if } 
+          1 < \sigma(n) < i + 1 \\
+        g(\sigma) & \text{if } \sigma(n) \leq 1
+      \end{cases}
+    $$
+
+    and the case of $\sigma(n) = 1$ is 
+    $g(\sigma) = g^0(g(\sigma)) 
+    = g^{\sigma(n) - 1}(g(\sigma))$, thus it 
+    can be merged with the $1 < \sigma(n) < i + 1$ case.
+    By gathering all these results we obtain
+
+    \begin{align*}
+      F^{i + 1} \left(\lambda\sigma.\bot\right) &=
+      \begin{cases}
+        F^i(
+          \lambda\sigma.\bot
+        ) \circ g &\text{if } \sigma(n) > 0 \\
+        \sigma &\text{if } \sigma(n) \leq 0
+      \end{cases} \\ &= 
+      \begin{cases}
+        \bot & \text{if } \sigma(n) \geq i + 1 \\
+        g^{\sigma(n)}(\sigma) & \text{if } 0 < \sigma(n) < i + 1 \\
+        \sigma &\text{if } \sigma(n) \leq 0
+      \end{cases}
+    \end{align*}
+
+  \item Give an explicit definition for 
+    $\sqcup_i F^i\left(\lambda\sigma.\bot\right)$.
+
+    $$\sqcup_i F^i\left(\lambda\sigma.\bot\right)
+      = \lambda\sigma.\begin{cases}
+        \sigma
+          \left[
+            x \mapsto 2^{\sigma(n)} \cdot \sigma(x),
+            n \mapsto 0
+          \right] & \text{if } \sigma(n) > 0 \\
+        \sigma & \text{if } \sigma(n) \leq 0
+      \end{cases}
+    $$
+
+    This function is greater than $
+      F^i(\lambda\sigma.\bot) \;\forall i \geq 1
+    $ in the sense that it has always less values of its domain
+    mapped to $\bot$ (i.e. none at all) and it matches 
+    the same image for those of 
+    $F^i(\lambda\sigma.\bot)$ which are not mapped to $\bot$.
+
+  \item Which is the least fixed point of $F$? Justify 
+    you answer.
+
+    The least fixed point of $F$ is the function 
+    $\sqcup_i F^i$ stated in the previous section.
+
+    This result follows by $
+    \big(
+      \textbf{State} \rightarrow \textbf{State}_\bot,
+      \sqsubseteq
+    \big)$ being a $ccpo$ for the order relation which we 
+    are using, the function $F$ being monotonically increasing and 
+    continuous, and a theorem which states that, under these conditions, 
+    $\sqcup_i F^i$ is the least fixed point of $F$. 
+
+  \item Given the above, compute the state resulting from
+    the execution of the following program
+
+    $$
+      x := 1;
+      \text{ \Verb|while| } n > 0 \text{ \Verb|do| }
+        \left( 
+          x := 2 * x;\;
+          n := n - 1
+        \right)
+    $$
+
+    under the initial state $\sigma = [n \mapsto 4]$.
+
+    The denotational semantics for its sequenced 
+    substatements are:
+
+    \begin{align*}
+      \mathcal{S}\llbracket x:= 1\rrbracket &=
+        \lambda\sigma.\sigma\left[x \mapsto 1\right] \\ 
+      \mathcal{S}
+      \llbracket
+        \text{ \Verb|while| } n > 0 \text{ \Verb|do| }
+        \left( 
+          x := 2 * x;\;
+          n := n - 1
+        \right)
+      \rrbracket &= lfp \; F
+    \end{align*}
+    
+    where the required least fixed point is precisely
+    the one which we have been obtaining in this exercise: 
+
+    $$
+      lfp \; F = \lambda\sigma. 
+          \begin{cases}
+          \sigma
+          \left[
+            x \mapsto 2^{\sigma(n)} \cdot \sigma(x),
+            n \mapsto 0
+          \right] & \text{if } \sigma(n) > 0 \\
+          \sigma & \text{if } \sigma(n) \leq 0
+          \end{cases}
+    $$
+
+    The whole program semantics consist of its composition
+
+    $$
+      lfp \; F \circ \lambda\sigma.\sigma
+      \left[
+        x \mapsto 1
+      \right]
+    $$
+
+    so let us apply it to the initial state in order to get the 
+    final one: 
+
+    \begin{align*}
+      \big(lfp \; F \circ \lambda\sigma.\sigma
+      \left[
+        x \mapsto 1
+      \right]\big)\big([n \mapsto 4]\big) &= 
+      \big(lfp \; F\big)\big([
+        x \mapsto 1,
+        n \mapsto 4
+      ]\big) \\
+      &= [
+        x \mapsto 2^4,
+        n \mapsto 0
+      ]
+    \end{align*}
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,617 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage[shortlabels]{enumitem}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{stmaryrd}
+\usepackage{fancyvrb}
+
+\title{Assignments 2 and 3 on Program Semantics}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}[2.]
+  \item Assume we extend the syntax of \textit{While} statements
+    with a new construct: \verb|repeat| $S$ \verb|until| $b$. 
+    This statement is executed as follows:
+
+    \begin{enumerate}[(1)]
+      \item Execute $S$.
+      \item Check whether $b$ is false. In this case, step back
+        to (1). Otherwise, finish.
+    \end{enumerate}
+
+    Define the big-step and small-step semantic rules for this 
+    new construct. You cannot rely on the rules of \verb|while|
+    to define the rules of \verb|repeat|. Finally, prove that
+    \verb|repeat| $S$ \verb|until| $b$ is equivalent to 
+    ($S$; \verb|while| $\neg b$ \verb|do| $S$).
+
+    Its big-step semantics can be stated by the rules
+
+    $$
+    \frac
+      {
+        \langle S, \sigma \rangle \Downarrow \sigma' \;\;\;\;
+        \mathcal{B}\llbracket b \rrbracket \sigma' = true
+      }
+      {
+        \langle 
+          \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+          \sigma
+        \rangle \Downarrow \sigma'
+      }
+    \left[\text{RepeatT}_\text{BS}\right]
+    $$
+
+    $$
+    \frac
+      {
+        \langle S, \sigma \rangle \Downarrow \sigma' \;\;\;\;
+        \mathcal{B}\llbracket b \rrbracket \sigma' = false \;\;\;\;
+        \langle 
+          \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+          \sigma'
+        \rangle \Downarrow \sigma''
+      }
+      {
+        \langle 
+          \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+          \sigma
+        \rangle \Downarrow \sigma''
+      }
+    \left[\text{RepeatF}_\text{BS}\right]
+    $$
+
+    and its small-step semantics can be defined as
+
+    $$
+    \frac
+      {
+      }
+      {
+      \splitfrac{
+        \langle 
+          \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+          \sigma
+        \rangle \longrightarrow
+      }
+      {
+        \langle 
+          S;
+          \text{\Verb|if |} b \text{ \Verb|then skip else| } 
+          \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+          \sigma
+        \rangle
+      }
+      }
+    \left[\text{Repeat}_\text{SS}\right]
+    $$
+
+    We know by a theorem that both big-step and small-step
+    semantics are equivalent for the current constructs of 
+    \textit{While}, so let us check that it is also true for our 
+    new construct definition.
+
+    On the one hand, suppose that 
+    $
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma
+      \rangle \Downarrow \sigma'
+    $. According to the big-step rules, the simplest possibility 
+    is that the premises 
+    $\langle S, \sigma \rangle \Downarrow \sigma'$ and
+    $\mathcal{B}\llbracket b \rrbracket \sigma' = true$ are 
+    satisfied. 
+    By applying the rule induction hypothesis on the proof subtree, 
+    we have 
+    $\langle S, \sigma \rangle \longrightarrow^{*} \sigma'$, so
+
+    \begin{align*}
+      \langle
+        \text{\Verb|repeat| } S &\text{ \Verb|until| } b,
+        \sigma
+      \rangle \\&\longrightarrow
+      \langle
+        S;
+        \text{\Verb|if |} b \text{ \Verb|then skip else| } 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma
+      \rangle \\&\longrightarrow^{*}
+      \langle 
+        \text{\Verb|if |} b \text{ \Verb|then skip else| } 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma'
+      \rangle \\&\longrightarrow
+      \langle 
+        \text{\Verb|skip|},
+        \sigma'
+      \rangle \\&\longrightarrow
+      \sigma'
+    \end{align*}
+
+    where the sequencing derivation chain step comes from a 
+    known lemma whose proof can be easily revisited for taking 
+    into account this new construct.
+
+    Another possibility is that the satisfied premises are 
+    $\langle S, \sigma \rangle \Downarrow \sigma''$,
+    $\mathcal{B} \llbracket b \rrbracket \sigma'' = false$ and 
+    $
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma''
+      \rangle \Downarrow \sigma'
+    $. By applying the induction hypothesis to both proof
+    subtrees, this time we have
+
+    \begin{align*}
+    \langle S, \sigma \rangle &\longrightarrow^{*} \sigma'' \\
+    \langle 
+      \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+      \sigma''
+    \rangle &\longrightarrow^{*} \sigma'
+    \end{align*}
+
+    so, with all this together and the same sequencing lemma, 
+    we conclude with
+
+    \begin{align*}
+      \langle
+        \text{\Verb|repeat| } S &\text{ \Verb|until| } b,
+        \sigma
+      \rangle \\&\longrightarrow
+      \langle
+        S;
+        \text{\Verb|if |} b \text{ \Verb|then skip else| } 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma
+      \rangle \\&\longrightarrow^{*}
+      \langle 
+        \text{\Verb|if |} b \text{ \Verb|then skip else| } 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma''
+      \rangle \\&\longrightarrow
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma''
+      \rangle \\&\longrightarrow^{*}
+      \sigma'
+    \end{align*}
+
+    On the other hand, suppose that 
+    $
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma
+      \rangle \longrightarrow^{k}
+      \sigma'
+    $, so the derivation chain must have the following shape:
+
+    \begin{align*}
+      \langle
+        \text{\Verb|repeat| } S &\text{ \Verb|until| } b,
+        \sigma
+      \rangle \\&\longrightarrow
+      \langle
+        S;
+        \text{\Verb|if |} b \text{ \Verb|then skip else| } 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma
+      \rangle \\&\longrightarrow^{k - 1}
+      \sigma'
+    \end{align*}
+
+    By using a second known lemma for sequencing derivation 
+    chains, whose proof can be easily revisited for taking into 
+    account this new construct of the language, there must 
+    exist a $\sigma''$ such that 
+
+    \begin{align*}
+    \langle S, \sigma \rangle &\longrightarrow^{k_1} \sigma'' \\
+    \langle 
+        \text{\Verb|if |} b \text{ \Verb|then skip else| } 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma''
+    \rangle &\longrightarrow^{k_2} \sigma'
+    \end{align*}
+
+    with $k_1$ and $k_2$ smaller than $k - 1$, thus also 
+    smaller that $k$. 
+
+    By induction hypothesis on the length
+    of the derivation chain for the leftmost side, we have 
+    $\langle S, \sigma \rangle \Downarrow \sigma''$ and now
+    there are two cases to distinguish:
+
+    \begin{itemize}
+      \item If 
+        $\mathcal{B} \llbracket b \rrbracket \sigma'' = true$,
+        then 
+        $
+          \langle 
+            \text{\Verb|skip|} , \sigma'' 
+          \rangle \longrightarrow\sigma'
+        $, so $\sigma' = \sigma''$ and we can conclude with
+        $
+          \langle 
+            \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+            \sigma
+          \rangle \Downarrow \sigma'
+        $.
+      \item If 
+        $\mathcal{B} \llbracket b \rrbracket \sigma'' = false$,
+        then
+        $
+          \langle 
+            \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+            \sigma''
+          \rangle \longrightarrow^{k_2 - 1} \sigma'
+        $ and, as $k_2 - 1$ is also smaller than $k$, the 
+        induction hypothesis can be applied to the rightmost
+        side to obtain 
+        $
+          \langle 
+            \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+            \sigma''
+          \rangle \Downarrow \sigma'
+        $. This path also leads to all the premises satisfied 
+        for concluding with
+        $
+          \langle 
+            \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+            \sigma
+          \rangle \Downarrow \sigma'
+        $.
+    \end{itemize}
+
+    Once the big-step and small-step semantics have been reaffirmed 
+    to be equivalent even with this added construct, any of them 
+    can be chosen for proving the requested statements equivalence. 
+    We are going to proceed using the big-step semantics.
+
+    For one of the implications, suppose that 
+    $
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma
+      \rangle \Downarrow \sigma'
+    $. One of the possible rules requires that
+    $\langle S, \sigma \rangle \Downarrow \sigma'$ and
+    $\mathcal{B}\llbracket b \rrbracket \sigma' = true$ so,
+    as $
+      \mathcal{B}\llbracket \neg b \rrbracket \sigma' = 
+      \neg \mathcal{B}\llbracket  b \rrbracket \sigma' = false
+    $, it holds that 
+    $
+      \langle 
+        \text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma' 
+      \rangle \Downarrow \sigma'
+    $ and therefore
+    $
+      \langle 
+        S;\text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma 
+      \rangle \Downarrow \sigma'
+    $.
+
+    The other possible rule requires that
+    $\langle S, \sigma \rangle \Downarrow \sigma''$,
+    $\mathcal{B} \llbracket b \rrbracket \sigma'' = false$ and 
+    $
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma''
+      \rangle \Downarrow \sigma'
+    $. By applying the induction hypothesis to the proof
+    subtree of the latter premise, we have 
+
+    $$
+      \langle 
+        S;\text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma'' 
+      \rangle \Downarrow \sigma'
+    $$
+
+    This sequencing requires itself
+    $
+      \langle 
+        S,
+        \sigma''
+      \rangle \Downarrow \sigma'''
+    $ and 
+    $
+      \langle 
+        \text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma'''
+      \rangle \Downarrow \sigma'
+    $ which, by knowing 
+    $
+      \mathcal{B}\llbracket \neg b \rrbracket \sigma'' = 
+      \neg \mathcal{B}\llbracket  b \rrbracket \sigma'' = true
+    $ imply 
+
+    $$
+      \langle 
+        \text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma''
+      \rangle \Downarrow \sigma'
+    $$
+
+    and finally 
+
+    $$
+      \langle 
+      S;\text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma
+      \rangle \Downarrow \sigma'
+    $$
+
+    For the converse implication, suppose that 
+    $
+      \langle 
+        S;\text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma
+      \rangle \Downarrow \sigma'
+    $, which requires 
+    $\langle S, \sigma \rangle \Downarrow \sigma''$
+    and 
+    $
+      \langle 
+        \text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma''
+      \rangle \Downarrow \sigma'
+    $.
+
+    If $\mathcal{B}\llbracket \neg b \rrbracket \sigma'' = false$,
+    then 
+    $
+      \mathcal{B}\llbracket b \rrbracket \sigma'' =
+      \neg \neg \mathcal{B}\llbracket b \rrbracket \sigma'' =
+      \neg \mathcal{B}\llbracket \neg b \rrbracket \sigma'' = true
+    $ and $\sigma' = \sigma''$, so 
+    $
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma
+      \rangle \Downarrow \sigma'
+    $.
+
+    Finally, if 
+    $\mathcal{B}\llbracket \neg b \rrbracket \sigma'' = true$,
+    then the \verb|while| rule requires 
+    $\langle S, \sigma'' \rangle \Downarrow \sigma'''$ and 
+    $
+      \langle 
+        \text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma'''
+      \rangle \Downarrow \sigma'
+    $, so 
+    $
+      \langle 
+        S;\text{\Verb|while| } \neg b \text{ \Verb|do| } S,
+        \sigma''
+      \rangle \Downarrow \sigma'
+    $ and, by rule induction on this last proof subtree, we have
+
+    $$
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma''
+      \rangle \Downarrow \sigma'
+    $$
+
+    which, by knowing that
+    $
+      \mathcal{B}\llbracket b \rrbracket \sigma'' =
+      \neg \neg \mathcal{B}\llbracket b \rrbracket \sigma'' =
+      \neg \mathcal{B}\llbracket \neg b \rrbracket \sigma'' = false
+    $ yields to all the premises satisfied for 
+
+    $$
+      \langle 
+        \text{\Verb|repeat| } S \text{ \Verb|until| } b,
+        \sigma
+      \rangle \Downarrow \sigma'
+    $$
+
+  \item Add the following iterative construct to \textit{While}:
+    \verb|for| $x := e_1$ \verb|to| $e_2$ \verb|do| $S$. Define
+    its big-step and small-step semantic rules. You cannot rely 
+    on the \verb|while| or \verb|repeat| construct to do this 
+    exercise.
+
+    Assuming that we want to be able to traverse both increasing
+    and decreasing sequences, and include the ending value, 
+    we can define its big-step semantic rules to be 
+
+    $$
+    \frac
+      {
+        \mathcal{A}\llbracket e_2 - e_1 \rrbracket \sigma 
+        =_\mathbb{Z} 0_\mathbb{Z} \;\;\;\;
+        \langle 
+          S, 
+          \sigma 
+            \left[
+              x \mapsto \mathcal{A} 
+                \llbracket e_1 \rrbracket \sigma
+            \right] 
+        \rangle \Downarrow \sigma' 
+      }
+      {
+        \langle 
+          \text{\Verb|for| } x:= e_1 \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma
+        \rangle \Downarrow \sigma'
+      }
+    \left[\text{ForEQ}_\text{BS}\right]
+    $$
+
+    $$
+    \frac
+      {\splitfrac{
+        \mathcal{A}\llbracket e_2 - e_1 \rrbracket \sigma 
+        >_\mathbb{Z} 0_\mathbb{Z} \;\;\;\;
+        \langle 
+          S, 
+          \sigma 
+          \left[
+            x \mapsto \mathcal{A} 
+              \llbracket e_1 \rrbracket \sigma
+          \right] 
+        \rangle \Downarrow \sigma'
+      }
+      {
+        \langle
+           \text{\Verb|for| } x:= e_1 + 1 \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma'
+        \rangle \Downarrow \sigma''
+      }
+      }
+      {
+        \langle 
+          \text{\Verb|for| } x:= e_1 \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma
+        \rangle \Downarrow \sigma''
+      }
+    \left[\text{ForGT}_\text{BS}\right]
+    $$
+
+    $$
+    \frac
+      {\splitfrac{
+        \mathcal{A}\llbracket e_2 - e_1 \rrbracket \sigma 
+        <_\mathbb{Z} 0_\mathbb{Z} \;\;\;\;
+        \langle 
+          S, 
+          \sigma
+          \left[
+            x \mapsto \mathcal{A} 
+              \llbracket e_1 \rrbracket \sigma
+          \right] 
+        \rangle \Downarrow \sigma'
+      }
+      {
+        \langle
+           \text{\Verb|for| } x:= e_1 - 1 \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma'
+        \rangle \Downarrow \sigma''
+      }
+      }
+      {
+        \langle 
+          \text{\Verb|for| } x:= e_1 \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma
+        \rangle \Downarrow \sigma''
+      }
+    \left[\text{ForLT}_\text{BS}\right]
+    $$
+
+    If we want to admit only increasing sequences, we can omit the 
+    $[\text{ForLT}_\text{BS}]$ rule. $[\text{ForEQ}_\text{BS}]$
+    can also be easily modified in order to avoid the ending sequence
+    value.
+
+    Keeping the same assumptions followed for the big-step semantics,
+    its small-step semantics can be defined as
+
+    $$
+    \frac
+      {
+        \mathcal{A}\llbracket e_2 - e_1 \rrbracket \sigma 
+        =_\mathbb{Z} 0_\mathbb{Z} 
+      }
+      {
+        \langle 
+          \text{\Verb|for| } x:= e_1 \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma
+        \rangle \longrightarrow
+        \langle
+          S,
+          \sigma
+          \left[
+            x \mapsto \mathcal{A} 
+              \llbracket e_1 \rrbracket \sigma
+          \right] 
+        \rangle
+      }
+    \left[\text{ForEQ}_\text{SS}\right]
+    $$
+
+    $$
+    \frac
+      {
+        \mathcal{A}\llbracket e_2 - e_1 \rrbracket \sigma 
+        >_\mathbb{Z} 0_\mathbb{Z}
+      }
+      {\splitfrac{
+        \langle 
+          \text{\Verb|for| } x:= e_1 \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma
+        \rangle \longrightarrow
+      }
+      {
+        \langle 
+          S;\text{\Verb|for| } x:= e_1 + 1 
+            \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma
+          \left[
+            x \mapsto \mathcal{A} 
+              \llbracket e_1 \rrbracket \sigma
+          \right] 
+        \rangle 
+      }
+      }
+    \left[\text{ForGT}_\text{SS}\right]
+    $$
+
+    $$
+    \frac
+      {
+        \mathcal{A}\llbracket e_2 - e_1 \rrbracket \sigma 
+        <_\mathbb{Z} 0_\mathbb{Z}
+      }
+      {\splitfrac{
+        \langle 
+          \text{\Verb|for| } x:= e_1 \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma
+        \rangle \longrightarrow
+      }
+      {
+        \langle 
+          S;\text{\Verb|for| } x:= e_1 - 1 
+            \text{ \Verb|to| } e_2
+            \text{ \Verb|do| } S,
+          \sigma
+          \left[
+            x \mapsto \mathcal{A} 
+              \llbracket e_1 \rrbracket \sigma
+          \right] 
+        \rangle 
+      }
+      }
+    \left[\text{ForLT}_\text{SS}\right]
+    $$
+
+    where it is easy to adapt the rules if we want to change
+    the construct requirements in the same way as discussed 
+    for the big-step semantics.
+\end{enumerate}
+
+\end{document}
