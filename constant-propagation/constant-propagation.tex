@@ -1,0 +1,641 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{fancyvrb}
+\usepackage{stmaryrd}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+
+\title{Constant propagation analysis by abstract interpretation}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+A \textit{constant propagation analysis} tries to determine, at 
+each program point, whether a variable will always have the same 
+value at that point and, in case it does, it tells us which value.
+
+For example, given the following program:
+
+\begin{Verbatim}
+z := 4;
+n := 0;
+x := 0;
+while x <= 10 do
+    v := z * z;
+    n := x + v;
+    x := x + 1;
+end
+\end{Verbatim}
+
+We know that, after the assignment \Verb|v := z * z|, the variable
+\Verb|z| always contains the value 4, since once \Verb|z| is 
+assigned to at the beginning of the program, it is no longer 
+modified. We also know that \Verb|v| always contains 16 after that
+assignment, since it depends only on \Verb|z|. Neither \Verb|n| 
+nor \Verb|x| are constant after that assignment, since their value
+changes at each iteration of the loop.
+
+We are going to define an abstract interpreter for knowing whether
+the result of an expression \textit{must} be constant at runtime 
+and prove its correctness in terms of an interval analysis that 
+has been previously studied.
+
+\begin{definition}[
+  The \textbf{Interval} lattice
+]\label{def:ilattice}
+  The \textbf{Interval} lattice is defined as
+
+  $$
+    \textbf{Interval} = 
+      \{\bot\} \cup 
+      \{[a, b] \;
+        | \; a \in \mathbb{Z} \cup \{-\infty\}
+        , \; b \in \mathbb{Z} \cup \{+\infty\}
+        , \; a \leq b 
+      \}
+  $$
+
+  with the order relation
+
+  \begin{align*}
+    \bot &\sqsubseteq int \;\;\; 
+      \forall int \in \textbf{Interval} \\ 
+    [a_1, b_1] &\sqsubseteq [a_2, b_2] 
+      \iff a_2 \leq a_1 \land b_1 \leq b_2 \\
+        &\forall a_1, a_2 \in \mathbb{Z} \cup \{-\infty\}, 
+      \; \forall b_1, b_2 \in \mathbb{Z} \cup \{+\infty\}
+  \end{align*}
+\end{definition}
+
+We already know that \textbf{Interval} is a lattice where 
+$\bot$ represents the empty set, $\top$ is $[-\infty, +\infty]$
+and, for every pair of intervals, its least upper bound is the 
+smallest interval containing both and its greatest lower bound 
+is their intersection.
+
+It can be used to represent the possible values that a variable 
+may take at each program point and, although we already know an 
+abstract analysis which relates this lattice as an abstract domain 
+with the collecting semantics as a concrete domain, in this case
+it will be used as our concrete domain.
+
+\begin{definition}[
+  The $\mathbb{Z}_\bot^\top$ lattice
+]\label{def:clattice}
+  The set $\mathbb{Z}_\bot^\top = \mathbb{Z} \cup \{\top, \bot\}$
+  is a lattice with the order relation
+  
+  \begin{align*}
+    t &\sqsubseteq \top \;\;\; 
+      \forall t \in \mathbb{Z}_\bot^\top \\ 
+    \bot &\sqsubseteq t \;\;\; 
+      \forall t \in \mathbb{Z}_\bot^\top \\ 
+    t &\sqsubseteq t \;\;\; 
+      \forall t \in \mathbb{Z}_\bot^\top 
+  \end{align*}
+
+  where the respective least upper bound and greatest lower bound
+  of every pair $t_1, t_2 \in \mathbb{Z}_\bot^\top$ are
+
+  $$
+    t_1 \sqcup t_2 = 
+    \begin{cases}
+      t_1 & \text{if } t_1 = t_2 \\
+      \top & \text{otherwise}
+    \end{cases}
+  $$
+
+  $$
+  t_1 \sqcap t_2 = 
+  \begin{cases}
+    t_1 & \text{if } t_1 = t_2 \\
+    \bot & \text{otherwise}
+  \end{cases}
+  $$
+\end{definition}
+
+This will be our abstract domain, which represents the constant 
+value that a variable contains if it is known and $\top$ otherwise.
+$\bot$ is included in order to construct a lattice, but we are 
+not going to attach any special meaning to it.
+
+\begin{proposition}[
+  A Galois connection between \textbf{Interval}
+  and $\mathbb{Z}_\bot^\top$
+]\label{prop:sgal}
+
+  The quadruple $
+    (\textbf{Interval}, \alpha, \gamma, \mathbb{Z}_\bot^\top)
+  $ is a Galois connection with the abstraction function
+
+  \begin{align*}
+    \alpha(\bot) &= \bot \\
+    \alpha([a, b]) &= 
+      \begin{cases}
+        a & \text{if } a = b \\
+        \top & \text{otherwise}
+      \end{cases}
+    \;\;\; \forall a \in \mathbb{Z} \cup \{-\infty\}, 
+    \; \forall b \in \mathbb{Z} \cup \{+\infty\}
+  \end{align*}
+
+  and the concretization function
+
+  \begin{align*}
+    \gamma(\bot) &= \bot \\
+    \gamma(\top) &= \top \\
+    \gamma(k) & = [k, k] \;\;\; \forall k \in \mathbb{Z}
+  \end{align*}
+\end{proposition}
+
+\begin{proof}
+  We have that $\textbf{Interval}$ and $\mathbb{Z}_\bot^\top$ are 
+  lattices with the respective order relations stated in the 
+  Definitions \ref{def:ilattice} and \ref{def:clattice}. Let us 
+  check the required properties for $\alpha$ and $\gamma$ (i.e. 
+  both functions are monotonically increasing, 
+  $\gamma \circ \alpha \sqsupseteq id$ and 
+  $\alpha \circ \gamma \sqsubseteq id$).
+
+  The monotonicity of $\alpha$ can be studied by case distinction 
+  on its domain:
+
+  \begin{itemize}
+    \item $\bot \sqsubseteq int 
+      \; \forall int \in \textbf{Interval}$ and, as $\alpha(\bot) = 
+      \bot$, then $\alpha(\bot) \sqsubseteq \alpha(int)$.
+    
+    \item If $[a, b] \sqsubseteq int$ for some $int \in 
+      \textbf{Interval}$, $a \in \mathbb{Z} \cup \{-\infty\}$ and 
+      $b \in \mathbb{Z} \cup \{+\infty\}$ with $a \neq b$, then 
+      $int$ must be $[c, d]$ for some $c \in \mathbb{Z} \cup 
+      \{-\infty\}$ and $d \in \mathbb{Z} \cup \{+\infty\}$
+      with $c \neq d$. As $\alpha([a, b]) = \top$ and $\alpha(int) =
+      \alpha([c, d]) = \top$, it is satisfied that $\alpha([a, b]) 
+      \sqsubseteq \alpha(int)$.
+
+    \item If $[a, a] \sqsubseteq int$ for some $int \in 
+      \textbf{Interval}$ and $a \in \mathbb{Z}$, then $int$ by must 
+      be as one of the following cases:
+      
+      \begin{itemize}
+        \item[$\bullet$] $int = [a, a]$, so $\alpha([a, a]) = 
+          \alpha(int) = a$
+          
+        \item[$\bullet$] $int = [b, c]$ for some $b \in \mathbb{Z} 
+          \cup \{-\infty\}$ and $c \in \mathbb{Z} \cup \{+\infty\}$ 
+          with $b \neq c$. As $\alpha([a, a]) = a$, $\alpha([b, c]) =
+          \top$ and $a \sqsubseteq \top$, it follows that 
+          $\alpha([a, a]) \sqsubseteq \alpha(int) = \top$.
+        \end{itemize}
+  \end{itemize}
+
+  The monotonicity of $\gamma$ can likewise be studied by case 
+  distinction:
+
+  \begin{itemize}
+    \item $\bot \sqsubseteq k \; 
+      \forall k \in \mathbb{Z}_\bot^\top$ and, as $\gamma(\bot) =
+      \bot$, then $\gamma(\bot) \sqsubseteq \gamma(k)$.
+    
+    \item If $\top \sqsubseteq k$ for some $k \in 
+      \mathbb{Z}_\bot^\top$, then $k$ must also be $\top$,
+      so $\gamma(\top) = \gamma(k) = \top$.
+
+    \item If $a \sqsubseteq k$ for some $a \in \mathbb{Z}$ and
+      $k \in \mathbb{Z}_\bot^\top$, then $k$ by must be as one 
+      of the following cases:
+      
+      \begin{itemize}
+        \item[$\bullet$] $k = a$, so $\gamma(a) = \gamma(k) = 
+          [a, a]$.
+          
+        \item[$\bullet$] $k = \top$, so $\gamma(a) \sqsubseteq 
+          \gamma(k) = \top$.
+        \end{itemize}
+  \end{itemize}
+
+  With the same explicit technique, we can check that $\gamma 
+  \circ \alpha \sqsupseteq id$:
+
+  \begin{itemize}
+    \item $\alpha(\gamma(\bot)) = \alpha(\bot) = \bot$.
+    
+    \item $\alpha(\gamma([a, a])) = \alpha(a) = [a, a] \; 
+      \forall a \in \mathbb{Z}$.
+
+    \item $\alpha(\gamma([b, c])) = \alpha(\top) = \top \; 
+      \forall a \in \mathbb{Z} 
+      \; \forall b \in \mathbb{Z} \cup \{-\infty\}$ and $\forall 
+      c \in \mathbb{Z} \cup 
+      \{+\infty\}$ with $b \neq c$. This satisfies the property 
+      because $id([b, c]) = [b, c] \sqsubseteq \top$.
+  \end{itemize}
+
+  And, finally, it remains to be checked that $\alpha \circ 
+  \gamma \sqsubseteq id$:
+
+  \begin{itemize}
+    \item $\gamma(\alpha(\bot)) = \gamma(\bot) = \bot$.
+    
+    \item $\gamma(\alpha(\top)) = \gamma(\top) = \top$.
+
+    \item $\gamma(\alpha(a)) = \gamma([a, a]) = a \; 
+      \forall a \in \mathbb{Z}$.
+  \end{itemize}
+\end{proof}
+
+Note that, as $\alpha \circ \gamma = id$, this defined Galois 
+connection is also a Galois insertion. 
+
+These lattices and their connection would be useful if we were only 
+interested in the analysis of a single program variable, so we are
+going to extend it for being able to keep track of multiple 
+variables at once in the same analysis.
+
+\begin{definition}[
+  The \textbf{State} and \textbf{State$^{\#}$} lattices
+]\label{def:slattice}
+  We define the following lattices as the corresponding lattice 
+  extension to funcions of $\textbf{Interval}$ and 
+    $\mathbb{Z}_\bot^\top$:
+
+    \begin{align*}
+      \textbf{State } &= 
+        \textbf{Var } \rightarrow \textbf{ Interval} \\
+      \textbf{State}^\# &= 
+        \textbf{Var } \rightarrow \mathbb{Z}_\bot^\top \\
+    \end{align*}
+
+    where \textbf{Var} is the set of variable names.
+\end{definition}
+
+As we know, this kind of extension of a lattice to functions 
+yields also a lattice with the order relation 
+$f_1 \sqsubseteq f_2 \iff f_1(s) \sqsubseteq f_2(s) \; \forall s$ 
+in the former lattice.
+
+\begin{proposition}[
+  A Galois connection between \textbf{State} 
+  and \textbf{State$^{\#}$}
+]\label{prop:mgal}
+  The quadruple 
+  $(\textbf{State}, \alpha', \gamma', \textbf{State}^\#)$ is a 
+  Galois connection with the abstraction function
+
+  $$
+    \alpha'(f) = \alpha \circ f \;\;\; \forall f \in \textbf{State}
+  $$
+
+  and the concretization function
+
+  $$
+    \gamma'(f) = \gamma \circ f \;\;\; \forall f \in 
+      \textbf{State}^\#
+  $$
+
+\end{proposition}
+
+\begin{proof}
+  We have seen the Galois connection between \textbf{Interval}
+  and $\mathbb{Z}_\bot^\top$ in the Proposition \ref{prop:sgal} 
+  and this is its extension to funcions with domain \textbf{Var}, 
+  which we know that is a systematic method for deriving a new 
+  Galois connection.
+\end{proof}
+
+Given this relation between the two lattices from the  
+Definition \ref{def:slattice}, it can be derived an abstract
+interpreter for the abstract domain in terms of another
+interpreter for the concrete domain which can be used as
+a reference to guarantee the correctness of new interpreters.
+
+\begin{definition}[
+  An abstract interpreter for expressions in the \textbf{State}
+  lattice
+]\label{def:iabs}
+  Let $\llbracket e \rrbracket \textbf{State}
+  \rightarrow \textbf{Interval}$ be the function 
+  defined as follows:
+
+  \begin{align*}
+    \llbracket n \rrbracket &= \lambda \sigma. [n, n] \\
+    \llbracket x \rrbracket &= \lambda \sigma. \sigma(x) \\
+    \llbracket e_1 + e_2 \rrbracket &= 
+      \lambda \sigma. 
+        \Big(\llbracket e_1\rrbracket\sigma\Big) \oplus
+        \Big(\llbracket e_2\rrbracket\sigma\Big) \\
+    \llbracket e_1 - e_2 \rrbracket &= 
+      \lambda \sigma. 
+        \Big(\llbracket e_1\rrbracket\sigma\Big) \ominus
+        \Big(\llbracket e_2\rrbracket\sigma\Big) \\
+    \llbracket e_1 * e_2 \rrbracket &= 
+      \lambda \sigma. 
+        \Big(\llbracket e_1\rrbracket\sigma\Big) \otimes
+        \Big(\llbracket e_2\rrbracket\sigma\Big)
+  \end{align*}
+
+  where $n \in \mathbb{Z}$, $x \in$ \textbf{Var}, $e_1, e_2 \in$ 
+  \textbf{Exp} and the definitions of $\oplus, \ominus$ and 
+  $\otimes$ are respectively
+
+  \begin{align*}
+    \bot \oplus int &= \bot \;\;\;
+      \forall int \in \textbf{Interval} \\
+    int \oplus \bot &= \bot \;\;\;
+      \forall int \in \textbf{Interval} \\
+    [a_1, b_1] \oplus [a_2, b_2] &= 
+      [a_1 + a_2, b_1 + b_2] \\
+        &\forall a_1, a_2 \in \mathbb{Z} \cup \{-\infty\}, 
+        \; \forall b_1, b_2 \in \mathbb{Z} \cup \{+\infty\}
+  \end{align*}
+
+  \begin{align*}
+    \bot \ominus int &= \bot \;\;\;
+      \forall int \in \textbf{Interval} \\
+    int \ominus \bot &= \bot \;\;\;
+      \forall int \in \textbf{Interval} \\
+    [a_1, b_1] \ominus [a_2, b_2] &= 
+      [a_1 - b_2, b_1 - a_2] \\
+        &\forall a_1, a_2 \in \mathbb{Z} \cup \{-\infty\}, 
+        \; \forall b_1, b_2 \in \mathbb{Z} \cup \{+\infty\}
+  \end{align*}
+
+  \begin{align*}
+    \bot \otimes int &= \bot \;\;\;
+      \forall int \in \textbf{Interval} \\
+    int \otimes \bot &= \bot \;\;\;
+      \forall int \in \textbf{Interval} \\
+    [a_1, b_1] \otimes [a_2, b_2] &= 
+      [min(V), max(V)] \\
+        &\forall a_1, a_2 \in \mathbb{Z} \cup \{-\infty\}, 
+        \; \forall b_1, b_2 \in \mathbb{Z} \cup \{+\infty\} \\
+        & \text{ and } V = \{ a_1 \cdot a_2, a_1 \cdot b_2, b_1 \cdot a_2, b_1 \cdot b_2 \}
+  \end{align*}
+
+  $\llbracket e \rrbracket$ is an abstract interpreter for 
+  expressions in the \textbf{State} lattice.
+\end{definition}
+
+We assume to be known that this interpreter is correct and,
+although $\alpha \circ \llbracket e \rrbracket \circ \gamma'$
+is an interpreter in the \textbf{State$^\#$} lattice, it is in 
+general not computable. We are going to directly define a candidate 
+for this latter.
+
+\begin{definition}[
+  An abstract interpreter candidate for expressions in 
+  the \textbf{State$^\#$} lattice
+]\label{def:cabs}
+  Let $\llbracket e \rrbracket^\# \textbf{State}^\# \rightarrow 
+  \mathbb{Z}_\bot^\top$ be the function defined compositionally as
+  
+  \begin{align*}
+    \llbracket n \rrbracket^\# &= 
+      \lambda \sigma^\#. n \\ 
+    \llbracket x \rrbracket^\# &= 
+      \lambda \sigma^\#. \sigma^\#(x) \\ 
+    \llbracket e_1 \text{ op } e_2 \rrbracket^\# &= 
+      \lambda \sigma^\#.
+      \begin{cases}
+        \top & \text{if } 
+          \llbracket e_1 \rrbracket^\# \sigma^\# 
+            \in \{\top, \bot\} \\ 
+          &\;\;\;\lor
+          \llbracket e_2 \rrbracket^\# \sigma^\# 
+            \in \{\top, \bot\} \\
+          \llbracket e_1 \rrbracket^\# \sigma^\# 
+            \text{ op$_\mathbb{Z}$ } \llbracket e_2 
+            \rrbracket^\# \sigma^\# 
+            & \text{otherwise} 
+      \end{cases}
+  \end{align*}
+
+  where $n \in \mathbb{Z}$, $x \in$ \textbf{Var}, $e_1, e_2 \in$ 
+  \textbf{Exp}, $\text{op} \in \{+, -, *\}$ and 
+  $\text{op}_\mathbb{Z}$ denotes its corresponding counterpart
+  operations in $\mathbb{Z}$.
+
+  This function is an interpreter which determines whether the 
+  result of an expression must be constant at runtime given an 
+  abstract state.
+\end{definition}
+
+Finally, we are going to prove the correctness of the defined 
+interpreter in terms of the one from the Definition \ref{def:iabs}.
+
+\begin{proposition}[
+  $\llbracket e \rrbracket^\#$ is a correct abstract interpreter
+]
+
+The abstract interpreter from the Definition \ref{def:cabs} 
+is a correct abstract interpreter, thus it can be used in the 
+constant propagation analysis. 
+\end{proposition}
+
+\begin{proof}
+  Recall the abstract interpreter $\llbracket e \rrbracket$ 
+  in the lattice of intervals from the definition \ref{def:iabs},
+  whose correctness we assume to be known. Due to the Galois 
+  connection of the Proposition \ref{prop:mgal}, 
+  $\alpha \circ \llbracket e \rrbracket \circ \gamma'$ is 
+  also a correct interpreter for the \textbf{State$^\#$} 
+  lattice, so any other interpreter which always leads to less 
+  specific results than it (i.e. greater results) must also be 
+  considered to be correct.
+  
+  We are going to show that $\llbracket e \rrbracket^\# 
+  \sqsupseteq \alpha \circ \llbracket e \rrbracket \circ \gamma'$
+  by structural induction on the expression $e$.
+
+  Given a literal expression $n \in \mathbb{Z}$, the defined 
+  abstract interpreter yields the same literal
+
+  $$
+    \llbracket n \rrbracket^\# \sigma^\# = n
+  $$
+
+  and the derived one produces the same result
+
+  $$
+    (\alpha \circ \llbracket n \rrbracket \circ \gamma') \sigma^\# = 
+      \alpha (\llbracket n \rrbracket (\gamma' (\sigma^\#))) =
+      \alpha (\llbracket n \rrbracket (\gamma \circ \sigma^\#)) =
+      \alpha ([n, n]) = 
+      n
+  $$
+
+  so $\llbracket n \rrbracket^\# \sigma^\# = 
+  (\alpha \circ \llbracket n \rrbracket \circ \gamma') \sigma^\#$
+  
+  When given a variable $x \in$ \textbf{Var}, the defined
+  abstract interpreter takes its value from the abstract 
+  state
+
+  $$
+    \llbracket x \rrbracket^\# \sigma^\# = \sigma^\#(x)
+  $$
+
+  and the derived interpreter does the same but 
+  going and returning to the concrete domain by means of 
+  the concretization and the abstraction functions 
+
+  $$
+    (\alpha \circ \llbracket x \rrbracket \circ \gamma') \sigma^\# = 
+      \alpha (\llbracket x \rrbracket (\gamma' (\sigma^\#))) =
+      \alpha (\llbracket x \rrbracket (\gamma \circ \sigma^\#)) =
+      \alpha (\gamma(\sigma^\#(x)))
+  $$
+
+  As this is a Galois connection, we know that 
+  $\alpha \circ \gamma \sqsubseteq id$, so
+  $\alpha (\gamma(\sigma^\#(x))) \sqsubseteq \sigma^\#(x)$ and 
+  then 
+  $(\alpha \circ \llbracket x \rrbracket \circ \gamma') \sigma^\#
+  \sqsubseteq \llbracket x \rrbracket^\# \sigma^\#
+  $.
+
+  The base expression cases has been proved, so we proceed 
+  to the inductive steps. For an expression 
+  $e_1 + e_2$ with $e_1, e_2 \in$ \textbf{Exp}, the defined
+  abstract interpreter yields:
+
+  $$
+    \llbracket e_1 + e_2 \rrbracket^\# \sigma^\# = 
+    \begin{cases}
+      \top & \text{if } 
+        \llbracket e_1 \rrbracket^\# \sigma^\# 
+          \in \{\top, \bot\} \\ 
+        &\;\;\;\lor
+        \llbracket e_2 \rrbracket^\# \sigma^\# 
+          \in \{\top, \bot\} \\
+        \llbracket e_1 \rrbracket^\# \sigma^\# 
+          + \llbracket e_2 \rrbracket^\# \sigma^\# 
+          & \text{otherwise} 
+    \end{cases}
+  $$
+
+  If $\llbracket e_1 \rrbracket^\# \sigma^\# 
+    \in \{\top, \bot\}$ or 
+  $\llbracket e_2 \rrbracket^\# \sigma^\# 
+    \in \{\top, \bot\}$, then the property trivially holds.
+
+  We are going to develop the derived abstract interpreter
+  result in order to find more trivial situations:
+
+  \begin{align*}
+    (
+      \alpha \circ \llbracket e_1 + e_2 \rrbracket \circ \gamma'
+    )\sigma^\# &= 
+    \alpha (
+      \llbracket e_1 + e_2 \rrbracket (\gamma' (\sigma^\#))
+    ) \\ &=
+    \alpha (
+      \llbracket e_1 + e_2 \rrbracket (\gamma \circ \sigma^\#)
+    ) \\ &=
+    \alpha \Bigg(
+      \Big(\llbracket e_1\rrbracket(\gamma \circ \sigma^\#)\Big) 
+      \oplus
+      \Big(\llbracket e_2\rrbracket(\gamma \circ \sigma^\#)\Big)
+    \Bigg)
+  \end{align*}
+
+  If $\Big(\llbracket e_1\rrbracket(\gamma \circ \sigma^\#)\Big)
+  = \bot$ or 
+  $\Big(\llbracket e_2\rrbracket(\gamma \circ \sigma^\#)\Big)
+  = \bot$, then $\alpha(\bot) = \bot$ and the property also 
+  holds.
+
+  If it is not the case of any of the trivial ones, then 
+  $\llbracket e_1 \rrbracket^\# \sigma^\# = a$ and 
+  $\llbracket e_1 \rrbracket^\# \sigma^\# = b$ for some 
+  $a, b \in \mathbb{Z}$. The induction hypothesis states that 
+  
+  \begin{align*}
+    (
+      \alpha \circ \llbracket e_1\rrbracket \circ \gamma'
+    ) \sigma^\# = 
+    \alpha(\llbracket e_1\rrbracket(\gamma \circ \sigma^\#)) 
+      &\sqsubseteq \llbracket e_1 \rrbracket^\# \sigma^\# = a\\
+    (
+      \alpha \circ \llbracket e_2\rrbracket \circ \gamma'
+    ) \sigma^\# = 
+    \alpha(\llbracket e_2\rrbracket(\gamma \circ \sigma^\#))
+      &\sqsubseteq \llbracket e_2 \rrbracket^\# \sigma^\# = b
+  \end{align*}
+
+  As $\alpha(\llbracket e_1\rrbracket(\gamma \circ \sigma^\#))$
+  and $\alpha(\llbracket e_2\rrbracket(\gamma \circ \sigma^\#))$
+  cannot be $\bot$ nor $\top$, they must also be respectively $a$
+  and $b$, which requires that 
+  $\llbracket e_1\rrbracket(\gamma \circ \sigma^\#) = [a,a]$ and 
+  $\llbracket e_2\rrbracket(\gamma \circ \sigma^\#) = [b,b]$. This 
+  means that 
+
+  \begin{align*}
+    \alpha \Bigg(
+      \Big(\llbracket e_1\rrbracket(\gamma \circ \sigma^\#)\Big) 
+      \oplus
+      \Big(\llbracket e_2\rrbracket(\gamma \circ \sigma^\#)\Big)
+    \Bigg) &= \alpha([a,a] \oplus [b, b]) \\
+      &= \alpha([a + b,a + b]) \\
+      &= a + b
+  \end{align*}
+
+  which is the same as 
+  $\llbracket e_1 + e_2 \rrbracket^\# \sigma^\# = 
+  \llbracket e_1 \rrbracket^\# \sigma^\# 
+  + \llbracket e_2 \rrbracket^\# \sigma^\# 
+  = a + b$.
+
+  For an expression $e_1 - e_2$ with $e_1, e_2 \in$
+  \textbf{Exp}, the reasoning is as the above one until 
+  we have to develop the non trivial case, where we have:
+
+  \begin{align*}
+    \alpha \Bigg(
+      \Big(\llbracket e_1\rrbracket(\gamma \circ \sigma^\#)\Big) 
+      \ominus
+      \Big(\llbracket e_2\rrbracket(\gamma \circ \sigma^\#)\Big)
+    \Bigg) &= \alpha([a,a] \ominus [b, b]) \\
+      &= \alpha([a - b,a - b]) \\
+      &= a - b
+  \end{align*}
+
+  which is the same as 
+  $\llbracket e_1 - e_2 \rrbracket^\# \sigma^\# = 
+  \llbracket e_1 \rrbracket^\# \sigma^\# 
+  - \llbracket e_2 \rrbracket^\# \sigma^\# 
+  = a - b$.
+
+  Finally, for an expression $e_1 * e_2$ with $e_1, e_2
+  \in$ \textbf{Exp}, the reasoning is again as the composite 
+  expressions above until we 
+  have to develop the non trivial case
+
+  \begin{align*}
+    \alpha \Bigg(
+      \Big(\llbracket e_1\rrbracket(\gamma \circ \sigma^\#)\Big) 
+      \otimes
+      \Big(\llbracket e_2\rrbracket(\gamma \circ \sigma^\#)\Big)
+    \Bigg) &= \alpha([a,a] \otimes [b, b]) \\
+      &= \alpha([min(\{a \cdot b\}),max(\{a \cdot b\})]) \\
+      &= \alpha([a \cdot b,a \cdot b]) \\
+      &= a \cdot b
+  \end{align*}
+
+  which is the same as 
+  $\llbracket e_1 * e_2 \rrbracket^\# \sigma^\# = 
+  \llbracket e_1 \rrbracket^\# \sigma^\# 
+  \cdot \llbracket e_2 \rrbracket^\# \sigma^\# 
+  = a \cdot b$.
+\end{proof}
+
+\end{document}

@@ -1,0 +1,76 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+
+\title{Transfer nets exercise}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+A transfer net is a a Petri net extended with a set $Tr$
+of transfer arcs of the form $(p, t, q)$. In a transfer
+net, the enabling condition is exactly the same as in plain 
+Petri Nets. However, the firing rule of transitions is changed 
+so that when a transition $t$ is fired:
+
+\begin{itemize}
+  \item First, tokens are removed from the preconditions of $t$.
+  \item Then, if there is a transfer arc $(p, t, q) \in Tr$, then 
+    all the tokens in $p$ are transferred to $q$.
+  \item Finally, tokens are added to the postconditions of $t$.
+\end{itemize}
+
+For the sake of simplicity, we assume that for each transition 
+$t \in T$ there is at most one transfer arc in $t$ (i.e. one arc 
+of the form $(p, t, q) \in Tr$).
+
+\section{Formal definition}
+
+A \textit{net with transfer arcs} $N=(S, T, F, Tr)$ consists 
+of two disjoint sets of places and transitions $S$ and $T$, a
+set $F \subseteq (S \times T) \cup (T \times S)$ of arcs,
+and a set $Tr \subseteq S \times T \times S$ of transfer arcs 
+where, if $(p, t, q) \in Tr$ is a transfer arc then:
+
+\begin{enumerate}
+  \item $(p, t) \notin F$ and $(t, q) \notin F$ (i.e. transfer 
+    arcs do not overlap with regular arcs).
+  \item If $(p', t, q') \in Tr$, then $p' = p$ and $q' = q$ 
+    (i.e. one single transfer arc per transition at most).
+\end{enumerate}
+
+A transition $t \in T$ is enabled at marking $M$ of $N$ if 
+$M(s) > 0\;\forall s \in {}^\bullet t$. If $t$ is 
+enabled, then it can $fire$ leading to a marking $M'$ defined
+as:
+
+$$
+M'(s) = 
+  \begin{cases}
+    M(s) - 1 &\text{if } s \in {}^\bullet t \setminus t^\bullet \\
+    M(s) + 1 &\text{if } s \in t^\bullet \setminus {}^\bullet t \\
+    0        &\text{if } \exists s' \text{ s.t } (s, t, s') \in Tr \land s \neq s' \\
+    M(s')    &\text{if } \exists s' \text{ s.t } (s', t, s) \in Tr \land s \neq s' \\
+    M(s)     &\text{otherwise}
+  \end{cases}
+$$
+
+\section{Informal discussion about its monotonicity}
+
+This Petri net variant seems to satisfy the strict version of 
+monotonicity (i.e. if $M_1 \stackrel{t}{\rightarrow} M_2$ for a 
+transition $t$ and some markings $M_1$ and $M_2$ of the net, then
+$t$ is enabled for any marking $M'_1 > M_1$ and, when fired, results 
+in a  marking $M'_2 > M_2$).
+
+Petri nets with reset arcs fail to satisfy this monotonicity version 
+because we could add tokens to a reset precondition of a transition 
+and, when fired, the resulting marking would not be modified.
+
+When it is a transfer arc instead of a reset one, these tokens would 
+be moved to another place instead of being completely removed. It 
+allows to satisfy $M'_2 > M_2$ but, as the added tokens 
+to $M_1$ do not need to be kept there after the firing, the strongest version 
+of monotonicity is not satisfied.
+\end{document}

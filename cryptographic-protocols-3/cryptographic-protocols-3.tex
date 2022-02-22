@@ -1,0 +1,414 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{fancyvrb}
+\usepackage{fixltx2e}
+
+\renewcommand{\thesubsection}{\thesection.\alph{subsection}}
+
+\newcommand{\bit}[1]{\{0,1\}^{#1}}
+\newcommand{\zo}{\{0,1\}}
+\newcommand{\xor}{\oplus}
+
+\title{Homework 3}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+\section{Collision resistant hash function?}
+
+Let $H: \mathcal{M} \rightarrow \mathcal{T}$ be a collision resistant 
+hash function. We define $\hat{H}(x||b) := H(x)||b$ where $b$ denotes
+one bit and || denotes concatenation. 
+
+We are going to prove that 
+$\hat{H}$ is also a collision resistant hash function.
+For that, let $\mathcal{A}_{\hat{H}}$ be an adversary for the 
+collision resistance of $\hat{H}$. We can define an adversary $\mathcal{A}_H$
+for the collision resistance of $H$ which also plays the role of 
+oracle for $\mathcal{A}_{\hat{H}}$:
+
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+$\mathcal{A}_H$:
+  (m\textsubscript{1}$||$b\textsubscript{1}, m\textsubscript{2}$||$b\textsubscript{2}) $\leftarrow$ $\mathcal{A}_{\hat{H}}$()
+  O(m\textsubscript{1}, m\textsubscript{2})
+\end{Verbatim}
+
+It receives a pair of messages provided by 
+$\mathcal{A}_{\hat{H}}$, removes its last bit and sends them to the
+oracle for the collision resistance of $\mathcal{A}_H$. Note that
+it is an efficient adversary, as it only removes the last bit of 
+two messages.
+
+Recall the collision resistance advantage of $\mathcal{A}_H$, which is 
+the probability of it to win (i.e. the event 
+$H(m_1) = H(m_2) \land m_1 \neq m_2$, where $(m_1, m_2)$ is the pair 
+of messages provided by $\mathcal{A}_H$ to its oracle). We are going to 
+analyze this probability in terms of the  advantage of 
+$\mathcal{A}_{\hat{H}}$ itself.
+
+On the one hand, if $\mathcal{A}_{\hat{H}}$ wins, then we have 
+
+\begin{align*}
+  \hat{H}(m_1||b_1) = \hat{H}(m_2||b_2) \\
+  H(m_1)||b_1 = H(m_2)||b_2
+\end{align*}
+
+and $m_1||b_1 \neq m_2||b_2$. From the equality of the hashes
+we can extract $b_1 = b_2$ and $H(m_1) = H(m_2)$, so
+$m_1 \neq m_2$ and therefore $\mathcal{A}_H$ also wins.
+
+On the other hand, if $\mathcal{A}_{\hat{H}}$ does not win, then
+
+\begin{align*}
+  \hat{H}(m_1||b_1) \neq \hat{H}(m_2||b_2) \\
+  H(m_1)||b_1 \neq H(m_2)||b_2
+\end{align*}
+
+or $m_1||b_1 = m_2||b_2$. In this case, $\mathcal{A}_H$ can still
+win if $H(m_1) = H(m_2)$ and $m_1 \neq m_2$, which is only possible
+if $b_1 \neq b_2$.
+
+Given the above cases, the probability of $\mathcal{A}_H$ to win is as 
+follows:
+
+\begin{align*}
+\mathsf{CRadv}[\mathcal{A}_H, H] &= 
+  \mathsf{CRadv}[\mathcal{A}_{\hat{H}}, \hat{H}] \cdot 1 + 
+  (1 - \mathsf{CRadv}[\mathcal{A}_{\hat{H}}, \hat{H}]) \cdot \varepsilon \\
+  &\geq \mathsf{CRadv}[\mathcal{A}_{\hat{H}}, \hat{H}]
+\end{align*}
+
+where
+
+$$
+  \varepsilon = 
+    \mathsf{Pr}[m_1 \neq m_2 \land b_1 \neq b_2 \land H(m_1) = H(m_2)]
+$$
+
+If $\mathsf{CRadv}[\mathcal{A}_{\hat{H}}, \hat{H}]$ were not negligible,
+then $\mathsf{CRadv}[\mathcal{A}_H, H]$ would also be non negligible,
+which is not possible because $H$ is collision resistant. This implies
+that $\hat{H}$ is also collision resistant.
+
+\section{Signatures vs. encryption}
+
+In some literature, digital signatures are sometimes described as an 
+``inversion'' of public key encryption schemes, where we treat a message
+$m$ as a ciphertext of the encryption scheme and decrypt it using $sk$
+to produce a signature. To verify, the idea is then to encrypt and check 
+whether cyphertext matches the message.
+
+More concretely, let 
+$\mathcal{E} = (\mathsf{G}_\mathcal{E}, \mathsf{E}, \mathsf{D})$ be a 
+deterministic encryption scheme (i.e. algorithms $\mathsf{E}$ and 
+$\mathsf{D}$ are deterministic). Then we can define a signature 
+scheme $\Pi = (\mathsf{G}_{\Pi}, \mathsf{S}, \mathsf{V})$ as follows:
+
+\begin{minipage}[t][3.1cm][t]{.3\textwidth}
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+
+G$_{\Pi}$(n):
+  (sk, pk) $\leftarrow$ G$_{\mathcal{E}}$(n)
+  return (sk, pk)
+\end{Verbatim}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.3\textwidth}
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+
+S(m):
+  $\sigma$ $\leftarrow$ D\textsubscript{sk}(m)
+  return $\sigma$
+\end{Verbatim}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.3\textwidth}
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+
+V(m, $\sigma$):
+  c $\leftarrow$ E\textsubscript{pk}($\sigma$)
+  if m = c:
+    return 1 
+  else:
+    return 0
+\end{Verbatim}
+\end{minipage}
+
+For this exercise, we consider a weak security notion of digital signature
+scheme where the adversary does not get access to a signature oracle.
+
+A signature scheme $\Pi = (\mathsf{G}_{\Pi}, \mathsf{S}, \mathsf{V})$ is 
+unforgeable under a key only attack if for any PPT algorithm $\mathcal{A}$,
+the probability that the experiment 
+$\mathsf{Sig-forge}^{ka}_{\mathcal{A},\Pi}(n)$ evaluates to 1 is negligible,
+where
+
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+Sig-forge$\textsuperscript{$ka$}_{\mathcal{A},\Pi}$(n):
+  (sk, pk) $\leftarrow$ G$_{\Pi}$(n)
+  (m, $\sigma$) $\leftarrow$ $\mathcal{A}$(pk)
+  return V(m, $\sigma$)
+\end{Verbatim}
+
+The advantage of the adversary $\mathcal{A}$ over $\Pi$ under this 
+security notion is the aforementioned probability:
+
+$$
+\mathsf{Sig-forge}^{ka}\mathsf{adv}[\mathcal{A}_{\Pi}, \Pi] = 
+  Pr[\mathsf{Sig-forge}^{ka}_{\mathcal{A},\Pi}(n) = 1]
+$$
+
+Te following attack shows that $\Pi$ is not 
+$\mathsf{Sig-forge}^{ka}$ secure:
+
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+$\mathcal{A}$:
+  pk $\leftarrow$ O()
+  $\sigma$ $\overset{\$}{\leftarrow}$ $\mathcal{S}$
+  m $\leftarrow$ E\textsubscript{pk}($\sigma$)
+  O(m, $\sigma$)
+\end{Verbatim}
+
+This adversary generates a random $\sigma$ from 
+$\mathcal{S}$, namely the signature space of $\Pi$ 
+and also the message space of $\mathcal{E}$. It then obtains
+the message $m$ that matches this signature by performing
+the same operation used by $\mathsf{V}$ to verify. This trivially
+leads to $\mathsf{V}(m, \sigma)$ to output $1$, as 
+$\mathsf{E}_{pk}(\sigma) = m$.
+
+Note that this adversary is efficient because it generates 
+a random signature and uses $\mathsf{E}$, which also has to be 
+efficient. It always succeeds in creating a valid forgery, so its 
+advantage is
+
+$$
+\mathsf{Sig-forge}^{ka}\mathsf{adv}[\mathcal{A}_{\Pi}, \Pi] = 1
+$$
+
+and then $\Pi$ is not $\mathsf{Sig-forge}^{ka}$ secure.
+
+\section{$\Sigma$-protocol for Pedersen commitments}
+
+Let $\mathcal{G}$ be a group with a prime number $q$ of elements
+where the discrete logarithm problem is hard. The public parameters 
+of the Pedersen commitments are two group elements $g_1$ and $g_2$.
+
+To commit an element $m \in \mathbb{Z}_q$, the committer has to 
+choose a random element $x \in \mathbb{Z}_q$ and compute the 
+commitment as $c \coloneqq g_1^m \cdot g_2^x$.
+
+We are going to define some $\Sigma$-protocols for proving 
+statements within this setting and prove its completeness, 
+special soundness and honest-verifier zero-knowledge.
+
+\subsection{$\mathsf{POK}[\exists m \exists x : c = g_1^m \cdot g_2^x]$}
+
+This protocol allows a prover to announce that he has committed
+a message without revealing his choice, which cannot be modified
+once the announcement has been made:
+
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+Prover(($\mathcal{G}$, g\textsubscript{1}, g\textsubscript{2}, c), (m, x)):
+  (u\textsubscript{1}, u\textsubscript{2}) $\leftarrow$ $\mathbb{Z}$\textsubscript{q}\textsuperscript{2}
+  a $\coloneqq$\textsubscript{q} g\textsubscript{1}\textsuperscript{u\textsubscript{1}} $\cdot$ g\textsubscript{2}\textsuperscript{u\textsubscript{2}}
+  ch $\leftarrow$ Verifier(a)
+  r\textsubscript{1} $\coloneqq$\textsubscript{q} u\textsubscript{1} + ch $\cdot$ m
+  r\textsubscript{2} $\coloneqq$\textsubscript{q} u\textsubscript{2} + ch $\cdot$ x
+  Verifier(r\textsubscript{1}, r\textsubscript{2})
+\end{Verbatim}
+
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+Verifier(($\mathcal{G}$, g\textsubscript{1}, g\textsubscript{2}, c)):
+  a $\leftarrow$ Prover()
+  ch $\overset{\$}{\leftarrow}$ $\mathbb{Z}$\textsubscript{q}
+  (r\textsubscript{1}, r\textsubscript{2}) $\leftarrow$ Prover(ch)
+  if g\textsubscript{1}\textsuperscript{r\textsubscript{1}} $\cdot$ g\textsubscript{2}\textsuperscript{r\textsubscript{2}} =\textsubscript{q} a $\cdot$ c\textsuperscript{ch}:
+    return 1
+  else:
+    return 0
+\end{Verbatim}
+
+The name $ch$ has been used to denote the challenge, although the 
+letter $c$ is used more often, because one of the parameters 
+already has the name $c$.
+
+\subsubsection{Completeness}
+
+Completeness holds because
+
+\begin{align*}
+  g_1^{r_1} \cdot g_2^{r_2} 
+    &= g_1^{u_1 + ch \cdot m} \cdot g_2^{u_2 + ch \cdot x} \\
+    &= g_1^{u_1} \cdot g_1^{ch \cdot m} \cdot g_2^{u_2} \cdot g_2^{ch \cdot x} \\
+    &= a \cdot g_1^{ch \cdot m} \cdot g_2^{ch \cdot x} \\
+    &= a \cdot (g_1^{m} \cdot g_2^{x})^{ch} \\
+    &= a \cdot c^{ch} \\
+\end{align*}
+
+if the protocol has been followed properly.
+
+\subsubsection{Special soundness}
+
+Given two conversations with the same announcement where the
+challenge is different,
+$(a, ch, (r_1, r_2))$ and $(a, ch', (r_1', r_2'))$ with $ch \neq ch'$,
+the witness can be recovered:
+
+$$
+\begin{cases}
+  g_1^{r_1} \cdot g_2^{r_2} &= a \cdot c^{ch} \\
+  g_1^{r'_1} \cdot g_2^{r'_2} &= a \cdot c^{ch'}
+\end{cases}
+$$
+
+\begin{align*}
+  g_1^{r_1 - r'_1} \cdot g_2^{r_2 - r'_2} &= c^{ch - ch'} \\
+  g_1^{(r_1 - r'_1) \cdot (ch - ch')^{-1}} \cdot g_2^{(r_2 - r'_2) \cdot (ch - ch')^{-1}} &= c \\
+  g_1^{(r_1 - r'_1) \cdot (ch - ch')^{-1}} \cdot g_2^{(r_2 - r'_2) \cdot (ch - ch')^{-1}} &= g_1^m \cdot g_2^x \\
+\end{align*}
+
+$$
+\begin{cases}
+  m &= (r_1 - r'_1) \cdot (ch - ch')^{-1} \\
+  x &= (r_2 - r'_2) \cdot (ch - ch')^{-1}
+\end{cases}
+$$
+
+\subsubsection{Honest-verifier zero-knowledgeness}
+
+Given a challenge $ch$. Take $r_1$ and $r_2$ at random from $\mathbb{Z}_q$ 
+and compute
+
+$$a = g_1^{r_1} \cdot g_2^{r_2} \cdot c^{-ch}$$
+
+in order to generate a simulated conversation $(a, ch, (r_1, r_2))$.
+
+The probability of a simulated conversation to happen 
+is $1/q^2$ due to the randomness of $r_1$ and $r_2$ over $\mathbb{Z}_q$. 
+It is the same probability that for an honest conversation with 
+a fixed challenge $ch$, due to the randomness of $u_1$ and $u_2$ 
+over $\mathbb{Z}_q$.
+
+\subsection{$\mathsf{POK}[\exists m \exists x : c = g_1^m \cdot g_2^x \land c' = g_3^x]$}
+
+This protocol combines the previous one with a new statement where $g_3$ 
+is also a public element of $\mathcal{G}$:
+
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+Prover(($\mathcal{G}$, g\textsubscript{1}, g\textsubscript{2}, g\textsubscript{3}, c, c'), (m, x)):
+  (u\textsubscript{1}, u\textsubscript{2}, u\textsubscript{3}) $\leftarrow$ $\mathbb{Z}$\textsubscript{q}\textsuperscript{3}
+  a\textsubscript{1} $\coloneqq$\textsubscript{q} g\textsubscript{1}\textsuperscript{u\textsubscript{1}} $\cdot$ g\textsubscript{2}\textsuperscript{u\textsubscript{2}}
+  a\textsubscript{2} $\coloneqq$ g\textsubscript{3}\textsuperscript{u\textsubscript{3}}
+  ch $\leftarrow$ Verifier(a\textsubscript{1}, a\textsubscript{2})
+  r\textsubscript{1} $\coloneqq$\textsubscript{q} u\textsubscript{1} + ch $\cdot$ m
+  r\textsubscript{2} $\coloneqq$\textsubscript{q} u\textsubscript{2} + ch $\cdot$ x
+  r\textsubscript{3} $\coloneqq$\textsubscript{q} u\textsubscript{3} + ch $\cdot$ x
+  Verifier(r\textsubscript{1}, r\textsubscript{2}, r\textsubscript{3})
+\end{Verbatim}
+
+\begin{Verbatim}[commandchars=\\\{\},codes={\catcode`$=3\catcode`_=8}]
+Verifier(($\mathcal{G}$, g\textsubscript{1}, g\textsubscript{2}, g\textsubscript{3}, c, c')):
+  (a\textsubscript{1}, a\textsubscript{2}) $\leftarrow$ Prover()
+  ch $\overset{\$}{\leftarrow}$ $\mathbb{Z}$\textsubscript{q}
+  (r\textsubscript{1}, r\textsubscript{2}, r\textsubscript{3}) $\leftarrow$ Prover(ch)
+  if g\textsubscript{1}\textsuperscript{r\textsubscript{1}} $\cdot$ g\textsubscript{2}\textsuperscript{r\textsubscript{2}} =\textsubscript{q} a\textsubscript{1} $\cdot$ c\textsuperscript{ch} and g\textsubscript{3}\textsuperscript{r\textsubscript{3}} =\textsubscript{q} a\textsubscript{2} $\cdot$ c'\textsuperscript{ch}:
+    return 1
+  else:
+    return 0
+\end{Verbatim}
+
+\subsubsection{Completeness}
+
+Completeness holds because
+
+\begin{align*}
+  g_1^{r_1} \cdot g_2^{r_2} 
+    &= g_1^{u_1 + ch \cdot m} \cdot g_2^{u_2 + ch \cdot x} \\
+    &= g_1^{u_1} \cdot g_1^{ch \cdot m} \cdot g_2^{u_2} \cdot g_2^{ch \cdot x} \\
+    &= a_1 \cdot g_1^{ch \cdot m} \cdot g_2^{ch \cdot x} \\
+    &= a_1 \cdot (g_1^{m} \cdot g_2^{x})^{ch} \\
+    &= a_1 \cdot c^{ch} \\
+\end{align*}
+
+and 
+
+\begin{align*}
+  g_3^{r_3}
+    &= g_3^{u_3 + ch \cdot x} \\
+    &= g_3^{u_3} \cdot g_3^{ch \cdot x} \\
+    &= a_2 \cdot c'^{ch} \\
+\end{align*}
+
+if the protocol has been followed properly.
+
+\subsubsection{Special soundness}
+
+Given two conversations with the same announcement where the
+challenge is different,
+$((a_1, a_2), ch, (r_1, r_2, r_3))$ and $((a_1, a_2), ch', (r_1', r_2', r_3'))$ 
+with $ch \neq ch'$, the witness can be recovered:
+
+$$
+\begin{cases}
+  g_1^{r_1} \cdot g_2^{r_2} &= a_1 \cdot c^{ch} \\
+  g_1^{r'_1} \cdot g_2^{r'_2} &= a_1 \cdot c^{ch'}
+\end{cases}
+$$
+
+\begin{align*}
+  g_1^{r_1 - r'_1} \cdot g_2^{r_2 - r'_2} &= c^{ch - ch'} \\
+  g_1^{(r_1 - r'_1) \cdot (ch - ch')^{-1}} \cdot g_2^{(r_2 - r'_2) \cdot (ch - ch')^{-1}} &= c \\
+  g_1^{(r_1 - r'_1) \cdot (ch - ch')^{-1}} \cdot g_2^{(r_2 - r'_2) \cdot (ch - ch')^{-1}} &= g_1^m \cdot g_2^x \\
+\end{align*}
+
+$$
+\begin{cases}
+  m &= (r_1 - r'_1) \cdot (ch - ch')^{-1} \\
+  x &= (r_2 - r'_2) \cdot (ch - ch')^{-1}
+\end{cases}
+$$
+
+But, in this case, we also have an alternative way to recover $x$:
+
+$$
+\begin{cases}
+  g_3^{r_3} &= a_2 \cdot c'^{ch} \\
+  g_3^{r'_3} &= a_2 \cdot c'^{ch'}
+\end{cases}
+$$
+
+\begin{align*}
+  g_3^{r_3 - r'_3} &= c'^{ch - ch'} \\
+  g_3^{(r_3 - r'_3) \cdot (ch - ch')^{-1}} &= c' \\
+  g_3^{(r_3 - r'_3) \cdot (ch - ch')^{-1}} &= g_3^x \\
+\end{align*}
+
+$$x = (r_3 - r'_3) \cdot (ch - ch')^{-1}$$
+
+\subsubsection{Honest-verifier zero-knowledgeness}
+
+Given a challenge $ch$. Take $r_1, r_2$ and $r_3$ at random from $\mathbb{Z}_q$ 
+and compute
+
+$$
+\begin{cases}
+  a_1 &= g_1^{r_1} \cdot g_2^{r_2} \cdot c^{-ch} \\
+  a_2 &= g_3^{r_3} \cdot c'^{-ch}
+\end{cases}
+$$
+
+in order to generate a simulated conversation $((a_1, a_2), ch, (r_1, r_2, r_3))$.
+
+The probability of a simulated conversation to happen 
+is $1/q^3$ due to the randomness of $r_1, r_2$ and $r_3$ over $\mathbb{Z}_q$.
+It is the same probability that for an honest conversation with 
+a fixed challenge $ch$, due to the randomness of $u_1, u_2$ and $u_3$ 
+over $\mathbb{Z}_q$.
+
+\end{document}

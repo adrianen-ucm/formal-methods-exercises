@@ -1,0 +1,235 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+
+\newcommand{\overbar}[1]{
+  \mkern 1.5mu\overline{
+    \mkern-1.5mu#1\mkern-1.5mu
+  }\mkern 1.5mu
+}
+
+\title{Lossy Petri nets}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+A \textit{Lossy} Petri net is a variant which can loose tokens 
+at any time.
+
+In this document we define them and study the decidability of 
+its boundedness problem.
+
+\begin{definition}[
+  Lossy Petri net
+]\label{def:lossy-net}
+  Given a Petri net model with its enabling and firing rules, 
+  its lossy variant is syntactically identical but with 
+  the following semantics:
+
+  A lossy transition $M_1 \stackrel{t}{\rightarrow}_l M_2$
+  can happen whenever there are markings $M'_1$ and $M'_2$ such 
+  that:
+
+  \begin{itemize}
+    \item $M_1 \geq M'_1$
+    \item $M'_2 \geq M_2$
+    \item $M'_1 \stackrel{t}{\rightarrow} M'_2$ according to the 
+      usual enabling and firing rules of its counterpart model.
+  \end{itemize}
+
+  As we have used the symbol $\rightarrow_l$ to differentiate the 
+  lossy semantics from the ones of its associated model, we also 
+  use $[\rangle_l$ to differentiate the set of reachable markings 
+  with this lossy semantics.
+\end{definition}
+
+\begin{lemma}[]\label{lem:regular-lossy}
+  Given a Petri net model and a marking $M$, its reachable markings 
+  are also reachable for its lossy variant: 
+
+  $$[M\rangle \subseteq [M\rangle_l$$
+\end{lemma}
+\begin{proof}
+  Let $M_2 \in [M\rangle$. As it is reachable, we have 
+  $M \rightarrow^* M_2$ for some chain of 
+  transitions. We are going to prove the property by induction
+  on the length of this chain.
+
+  If it has length one, then $M \stackrel{t}{\rightarrow} M_2$ for 
+  some transition $t$ and we know that $M \in [M\rangle$. 
+  These markings satisfy 
+  $M \geq M$ and $M_2 \geq M_2$, so we also have 
+  $M \stackrel{t}{\rightarrow}_l M_2$ and therefore $M_2 \in [M\rangle_l$.
+  
+  Proceeding with the inductive case, if it has length $k > 1$, 
+  then we have 
+  $$M \rightarrow^{k - 1} M_1 \stackrel{t}{\rightarrow} M_2$$
+  for some transition $t$ and marking $M_1$. 
+  
+  As before, $M_1 \geq M_1$ and 
+  $M_2 \geq M_2$, so we have
+  $M_1 \stackrel{t}{\rightarrow}_l M_2$. We also have that 
+  $M_1 \in [M\rangle_l$ by the induction hypothesis, so 
+  $M_2 \in [M\rangle_l$.
+\end{proof}
+
+\begin{lemma}[]\label{lem:lossy-smaller}
+  Given a Petri net model which satisfies at least the weak 
+  monotonicity lemma and a marking $M$, and let 
+  $M' \in [M\rangle_l$ be a lossy-reachable marking from $M$, then 
+  $\exists \overbar{M'} \in [M\rangle$ such that $\overbar{M'} 
+  \geq M'$. 
+\end{lemma}
+\begin{proof}
+  As $M'$ is lossy-reachable from $M$, we have 
+  $M \rightarrow^k_l M'$. We are going to prove the property
+  by natural induction over $k$.
+
+  If $k = 0$, then $M = M'$ and, as $M \in [M\rangle$,
+  we trivially have $M' \in [M\rangle$ with $M' \geq M'$.
+
+  Proceeding with the inductive step, if $k > 0$ we have 
+  $$M \rightarrow_l^{k-1} M'' \stackrel{t}{\rightarrow}_l M'$$
+  for some transition t and some lossy-reachable marking 
+  $M'' \in [M\rangle_l$.
+
+  On the one hand, this last lossy transition of the sequence
+  requires that $M_1 \stackrel{t}{\rightarrow} M_2$ for some 
+  markings $M_1$ and $M_2$ with $M'' \geq M_1$ and 
+  $M_2 \geq M'$.
+
+  On the other hand, by the induction hypothesis, there exists 
+  a reachable marking $\overbar{M} \in [M\rangle$ such that 
+  $\overline{M} \geq M''$.
+
+  As this Petri net satisfies the weak monotonicity lemma,
+  $\overbar{M} \geq M'' \geq M_1$ and 
+  $M_1 \stackrel{t}{\rightarrow} M_2$,  we have 
+  $\overbar{M} \stackrel{t}{\rightarrow} \overbar{M_2}$
+  with $\overbar{M_2} \geq M_2 \geq M'$ and 
+  $\overbar{M_2} \in [M\rangle$.
+\end{proof}
+
+\begin{theorem}[]\label{teo:bounded}
+  Given a Petri net $(N, M_0)$ from a model which satisfies 
+  at least the weak monotonicity lemma, it is bounded if and 
+  only if it is bounded with lossy semantics.
+\end{theorem}
+\begin{proof}
+  For the left to right implication, let $s$ be a place of $N$. 
+  If the net is bounded with its regular model semantics, then 
+  there exists a number $b \geq 0$ such that $M(s) \leq b$ 
+  $\forall M \in [M_0\rangle$.
+
+  By the Lemma \ref{lem:lossy-smaller}, for any lossy-reachable
+  marking $M' \in [M_0\rangle_l$, there exists a reachable marking
+  $\overline{M'} \in [M_0\rangle$ such that $\overline{M'} \geq M'$,
+  so $b \geq \overline{M'}(s) \geq M'(s)$ and therefore the net is 
+  lossy-bounded.
+
+  For the right to left implication, let $s$ be a place of $N$. 
+  If the net is lossy-bounded, then there exists a number 
+  $b \geq 0$ such that $M(s) \leq b$ $\forall M \in [M_0\rangle_l$.
+
+  By the Lemma \ref{lem:regular-lossy}, any reachable marking 
+  $M \in [M_0\rangle$ is also lossy-reachable 
+  (i.e. $M \in [M_0\rangle_l$), thus $M(s) \leq b$ and the net 
+  is bounded.
+\end{proof}
+
+\begin{corollary}[]\label{cor:regular-lossy-bound}
+By the Theorem \ref{teo:bounded}, as regular Petri nets satisfy 
+the weak monotonicity lemma and boundedness is decidable for them,
+boundedness is also decidable for regular Petri nets with lossy 
+semantics.
+
+For studying its boundedness, it suffices to study the property
+without taking into account the lossy transitions by using the 
+procedure that we know for regular Petri nets.
+\end{corollary}
+
+\begin{corollary}[]\label{cor:reset-lossy-bound}
+By the Theorem \ref{teo:bounded}, as Petri nets with reset arcs 
+satisfy the weak monotonicity lemma and boundedness is undecidable 
+for them, boundedness is also undecidable for lossy Petri nets 
+with reset arcs.
+\end{corollary}
+
+This theorem cannot be applied to Petri nets with inhibitor arcs 
+because they do not satisfy any version of the monotonicity lemma.
+However, we can find a close relation between lossy Petri nets with 
+reset arcs and lossy Petri nets with inhibitor arcs.
+
+\begin{lemma}[]\label{lem:iso}
+  Given a Petri net with reset arcs $(R, M_0)$ and the Petri net 
+  with inhibitor arcs $(I, M_0)$ which consists of replacing the
+  reset arcs of $R$ by inhibitor arcs:
+
+  $$
+    M_1 \stackrel{t}{\rightarrow}_l M_2 \text{ for } R \iff 
+    M_1 \stackrel{t}{\rightarrow}_l M_2 \text{ for } I
+  $$
+
+  As they have the same lossy transitions and initial marking, the 
+  reachability graph of both Petri nets with lossy semantics is 
+  isomorphic.
+\end{lemma}
+\begin{proof}
+First of all, note that the set of transitions $T$ is the same for both 
+nets. Let $t \in T$ be a transition and $M_1$ be a marking.
+
+Due to the definition of $I$, there are reset arcs relating some place 
+and $t$ for $R$ if and only if there are inhibitor arcs relating some place 
+and $t$ for $I$.
+
+On the one hand, if $t$ does not involve any reset arc, then it is trivial that 
+$M_1$ lossy-enables $t$ leading to a marking $M_2$ for $R$ if an 
+only if that is also the case for $I$, as the preconditions and 
+postconditions of $t$ are the same for both nets.
+
+On the other hand, if there is any reset arc $(s, t)$ for some place $s$, the enabling 
+of $t$ for $R$ does not depend on $M_1(s)$ due to its regular enabling rule and the 
+fact that if $M_1 \stackrel{t}{\rightarrow} M_2$ then 
+$M_1 \stackrel{t}{\rightarrow}_l M_2$. As it is an
+inhibitor arc for $I$, the enabling of $t$ also does not depend on
+$M_1(s)$ with lossy semantics because we can always consider
+
+$$
+M'_1(p) = 
+\begin{cases}
+  0 &\text{if there is an inhibitor arc } (p, t) \\
+  M_1(p) &\text{otherwise}
+\end{cases}
+$$
+
+and, if $M'_1 \stackrel{t}{\rightarrow} M_2$, then
+as $M_1 \geq M'_1$ and $M_2 \geq M_2$ we have
+$M_1 \stackrel{t}{\rightarrow}_l M_2$ independently of
+$M_1(s)$. For both nets, $M_2(s)$ will be $1$ or $0$ depending on whether the arc 
+$(t, s)$ exists or not.
+\end{proof}
+
+\begin{corollary}[]\label{cor:inhib-lossy-bound}
+  Boundedness is undecidable for lossy Petri nets with inhibitor 
+  arcs.
+
+  This is because, if it were decidable, then we could reduce
+  the boundedness problem for lossy Petri nets with reset
+  arcs to the boundedness problem for lossy Petri nets with 
+  inhibitor arcs by using the transformation from the Lemma 
+  \ref{lem:iso}, which preserves the reachability graph,
+  and it would be a contradiction due to the 
+  Corollary \ref{cor:reset-lossy-bound}.
+\end{corollary}
+
+\end{document}

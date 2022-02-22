@@ -1,0 +1,171 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+\newtheorem*{proposition}{Proposition}
+
+\title{Direct product of Galois connections}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+\begin{proposition}[
+  Direct product of Galois connections
+]
+  Let $(L, \sqsubseteq), (L_1^\#, \sqsubseteq_1)$ and 
+  $(L_2^\#, \sqsubseteq_2)$ be lattices such that 
+  $(L, \alpha_1, \gamma_1, L_1^\#)$ and 
+  $(L, \alpha_2, \gamma_2, L_2^\#)$ are Galois 
+  connections for some respective abstraction functions 
+
+  \begin{align*}
+    \alpha_1: L &\rightarrow L_1^\# \\
+    \alpha_2: L &\rightarrow L_2^\#
+  \end{align*}
+
+  and concretization functions 
+
+  \begin{align*}
+    \gamma_1: L_1^\# &\rightarrow L \\
+    \gamma_2: L_2^\# &\rightarrow L
+  \end{align*}
+
+  The quadruple $(L, \alpha, \gamma, L_1^\# \times L_2^\#)$
+  is a Galois connection where the abstraction function 
+  $\alpha: L \rightarrow L_1^\# \times L_2^\#$ is defined as
+
+  $$
+    \alpha(l) = (\alpha_1(l), \alpha_2(l)) \;\;\; \forall l \in L
+  $$
+
+  and the concretization function 
+  $\gamma: L_1^\# \times L_2^\# \rightarrow L$ is defined as
+
+  $$
+    \gamma(l_1, l_2) = \gamma_1(l_1) \sqcap \gamma_2(l_2) \;\;\; 
+      \forall (l_1, l_2) \in L_1^\# \times L_2^\#
+  $$
+\end{proposition}
+
+\begin{proof}
+  Recall the product partial order of the two lattices 
+  $(L_1^\#, \sqsubseteq_1)$ and 
+  $(L_2^\#, \sqsubseteq_2)$ defined
+  as
+
+  \begin{align*}
+    (l_1, l_2) \sqsubseteq_\times (m_1, m_2) &
+      \iff l_1 \sqsubseteq_1 m_1 
+      \land l_2 \sqsubseteq_2 m_2 \\ 
+        &\forall l_1, m_1 \in L_1^\#, \;\forall l_2, m_2 \in L_2^\#
+  \end{align*}
+
+  with which we already know that 
+  $(L_1^\# \times L_2^\#, \sqsubseteq_\times)$ is also a 
+  lattice.
+
+  Let us check that the required properties for $\alpha$ and 
+  $\gamma$ to form a Galois connection are satisfied (i.e. both 
+  functions are monotonically increasing, $\gamma \circ \alpha
+  \sqsupseteq id$ and $\alpha \circ \gamma \sqsubseteq_\times id$).
+
+  First, if $a \sqsubseteq b$ with $a, b \in L$, then 
+
+  \begin{align*}
+    \alpha(a) &= (\alpha_1(a), \alpha_2(a)) \\
+    \alpha(b) &= (\alpha_1(b), \alpha_2(b)) \\
+  \end{align*}
+
+  Due to the corresponding Galois connections for $L_1^\#$ and 
+  $L_2^\#$, the monotonicity of $\alpha_1$ and $\alpha_2$ 
+  implies that
+  $\alpha_1(a) \sqsubseteq_1 \alpha_1(b)$ and 
+  $\alpha_2(a) \sqsubseteq_2 \alpha_2(b)$, so 
+  $\alpha(a) \sqsubseteq_\times \alpha(b)$. This proves that $\alpha$
+  itself is also monotonically increasing.
+
+  Second, if $(l_1, l_2) 
+  \sqsubseteq_\times (m_1, m_2)$ with $
+  (l_1, l_2), (m_1, m_2) \in L_1^\# \times L_2^\#$, then 
+
+  \begin{align*}
+    \gamma(l_1, l_2) &= \gamma_1(l_1) \sqcap \gamma_2(l_2) \\
+    \gamma(m_1, m_2) &= \gamma_1(m_1) \sqcap \gamma_2(m_2) \\
+  \end{align*}
+
+  The product partial order requires that $l_1 \sqsubseteq_1 m_1$
+  and $l_2 \sqsubseteq_2 m_2$, so again, due to the 
+  Galois connections for $L_1^\#$ and $L_2^\#$, it must be the case 
+  that $\gamma_1(l_1) \sqsubseteq \gamma_1(m_1)$ and 
+  $\gamma_2(l_2) \sqsubseteq \gamma_2(m_2)$. These results
+  together with the definition of $\sqcap$ yield to 
+
+  \begin{align*}
+    \gamma_1(l_1) \sqcap \gamma_2(l_2) &\sqsubseteq \gamma_1(l_1) 
+      \sqsubseteq \gamma_1(m_1) \\
+    \gamma_1(l_1) \sqcap \gamma_2(l_2) &\sqsubseteq \gamma_2(l_2) 
+      \sqsubseteq \gamma_2(m_2)
+  \end{align*}
+
+  As $\gamma_1(l_1) \sqcap \gamma_2(l_2)$ is a lower bound of 
+  $\{\gamma_1(m_1), \gamma_2(m_2)\}$, it must be smaller or equal
+  than its greatest lower bound, so 
+  $\gamma_1(l_1) \sqcap \gamma_2(l_2) \sqsubseteq 
+  \gamma_1(m_1) \sqcap \gamma_2(m_2)$.
+
+  Once $\gamma$ has been proved to be monotonically increasing,
+  we are going to verify that$\gamma \circ \alpha \sqsupseteq id$. 
+  Let $l$ be an element of the concrete domain $L$, so we have that 
+
+  \begin{align*}
+    (\gamma \circ \alpha)(l) 
+      &= \gamma(\alpha(l)) \\
+      &= \gamma(\alpha_1(l), \alpha_2(l)) \\
+      &= \gamma_1(\alpha_1(l)) \sqcap \gamma_2(\alpha_2(l))
+  \end{align*}
+
+  The Galois connections for 
+  $L_1^\#$ and $L_2^\#$ already satisfy this property, so 
+  $l \sqsubseteq \gamma_1(\alpha_1(l))$ and 
+  $l \sqsubseteq \gamma_2(\alpha_2(l))$. As $l$ is a lower bound of 
+  $\{\gamma_1(\alpha_1(l)), \gamma_2(\alpha_2(l))\}$, it must be
+  smaller or equal than its greatest lower bound, so 
+  $l \sqsubseteq \gamma_1(\alpha_1(l)) \sqcap \gamma_2(\alpha_2(l))$.
+
+  Finally, for proving that $\alpha \circ \gamma 
+  \sqsubseteq_\times id$, let $(l_1, l_2)$ be an element of 
+  the abstract domain $L_1^\# \times L_2^\#$. We have that 
+
+  \begin{align*}
+    (\alpha \circ \gamma)(l_1, l_2)
+      &= \alpha(\gamma(l_1, l_2)) \\
+      &= \alpha(\gamma_1(l_1) \sqcap \gamma_2(l_2)) \\
+      &= (\alpha_1(\gamma_1(l_1) \sqcap \gamma_2(l_2)), 
+        \alpha_2(\gamma_1(l_1) \sqcap \gamma_2(l_2)))
+  \end{align*}
+
+  Once more, the Galois connections for $L_1^\#$ and $L_2^\#$ 
+  already satisfy
+  this property and also require $\alpha_1$ and $\alpha_2$ to be 
+  monotonically increasing. With all this and by knowing that 
+  $\gamma_1(l_1) \sqcap \gamma_2(l_2) \sqsubseteq \gamma_1(l_1)$ and 
+  $\gamma_1(l_1) \sqcap \gamma_2(l_2) \sqsubseteq \gamma_2(l_2)$ 
+  we have
+
+  \begin{align*}
+    \alpha_1(\gamma_1(l_1) \sqcap \gamma_2(l_2)) &\sqsubseteq_1 
+      \alpha_1(\gamma_1(l_1)) \sqsubseteq_1 l_1 \\
+    \alpha_2(\gamma_1(l_1) \sqcap \gamma_2(l_2)) &\sqsubseteq_2 
+      \alpha_2(\gamma_2(l_1)) \sqsubseteq_2 l_2
+  \end{align*}
+
+  thus $(\alpha_1(\gamma_1(l_1) \sqcap \gamma_2(l_2)), 
+  \alpha_2(\gamma_1(l_1) \sqcap \gamma_2(l_2))) 
+  \sqsubseteq_\times (l_1, l_2)$.
+\end{proof}
+
+\end{document}

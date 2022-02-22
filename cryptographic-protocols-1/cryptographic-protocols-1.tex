@@ -1,0 +1,549 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{mdframed}
+\usepackage{multirow}
+
+\renewcommand{\thesubsection}{\thesection.\alph{subsection}}
+
+%%ARROWS%%
+\newcommand{\verylongrightarrow}[1]     %longleft and rightgoing arrows
+    {\setlength{\unitlength}{.01in}     %for protocols
+     \begin{picture}(#1,1) \put(0,0){\thicklines\vector(1,0){#1}} \end{picture}}
+
+\newcommand{\rightgoing}[2]{{\stackrel{{\displaystyle #1}} {\verylongrightarrow{#2}}}}
+
+\newcommand{\verylongleftarrow}[1]
+    {\setlength{\unitlength}{.01in}
+         \begin{picture}(#1,1) \put(#1,0){\thicklines\vector(-1,0){#1}} \end{picture}}
+
+\newcommand{\leftgoing}[2]{{\stackrel{{\displaystyle #1}} {\verylongleftarrow{#2}}}}
+
+\newcommand{\longleft}[1]{\leftgoing{#1}{400} }
+\newcommand{\longright}[1]{\rightgoing{#1}{400} }
+\newcommand{\shortleft}[1]{\leftgoing{#1}{100} }
+\newcommand{\shortright}[1]{\rightgoing{#1}{100} }
+\newcommand{\shortleftright}[1]{\leftrightgoing{#1}{200} }
+\newcommand{\verylongleft}[1]{\leftgoing{#1}{500} }
+\newcommand{\verylongright}[1]{\rightgoing{#1}{500} }
+\def\sep{\,,\,} %used with arrow figures
+
+\newmdenv[
+  skipabove=\topsep,
+  skipbelow=\topsep
+]{scheme}
+
+\title{Cryptographic Protocols, day 4 exercises}
+\author{Adrián Enríquez Ballester}
+
+\begin{document}
+\maketitle
+
+\section{Perfect security against key recovery}
+
+A Shannon cipher $\mathcal{E} = (E, D)$ defined over $(\mathcal{K},
+\mathcal{M}, \mathcal{C})$ is perfectly secure against key recovery 
+if $\forall k_0, k_1 \in \mathcal{K}$ and 
+$\forall c \in \mathcal{C}$
+
+$$ Pr[E(k_0, m) = c] = Pr[E(k_1, m) = c] $$
+
+where the probability runs over the choice of $m$, which is chosen 
+uniformly at random in $\mathcal{M}$.
+
+\subsection{Perfectly secure against key recovery does not imply perfectly secure}
+
+Consider the identity cipher $\mathcal{E} = (E, D)$ where 
+$E(k, m) = m$ and $D(k, c) = c$, which is trivially a Shannon 
+cipher because $\forall k \in \mathcal{K}$ and 
+$\forall m \in \mathcal{M}$ we have
+
+$$ D(k, E(k, m)) = D(k, m) = m $$
+
+This cipher is not perfectly secure in also a trivial way because 
+it leaks everything about the message:
+
+$$
+  Pr[E(k, m) = c] = 
+  \begin{cases}
+    1, & \text{if } m = c \\
+    0, & \text{otherwise}
+  \end{cases} 
+$$
+
+$\forall m \in \mathcal{M}$ and $\forall c \in \mathcal{C}$, where 
+the probability runs uniformly over the choice of $k$ 
+in $\mathcal{K}$. 
+
+At the same time, it is perfectly 
+secure against key recovery because it does not use the provided
+key at all:
+
+\[ Pr[E(k, m) = c] = 1 / \left|\mathcal{M}\right| \]
+
+$\forall k \in \mathcal{K}$ and $\forall c \in \mathcal{C}$, being
+the probabilistic experiment at $m$, distributed uniformly in 
+$\mathcal{M}$.
+
+\subsection{Perfectly secure does not imply perfectly secure against key recovery}
+
+Consider this time a variant of the one-time-pad of size 
+$\ell$ where the message space $\mathcal{M}$ does not contain 
+the $0^\ell$ element.
+
+On the one hand, it still being perfectly secure because, given 
+any message $m \in \mathcal{M}$ and any ciphertext 
+$c \in \mathcal{C}$, there exists one single key 
+$k \in \mathcal{K}$ such that $E(k, m) = c$, namely
+
+$$k = m \oplus c$$
+
+On the other hand, this cipher is not perfectly secure against 
+key recovery because, once anyone observes a ciphertext, 
+it is clear that the key which is the same as the ciphertext 
+has not been used:
+
+$$
+  Pr[E(k, m) = c] = 
+  \begin{cases}
+    0, & \text{if } k = c \\
+    1 / \left|\mathcal{M}\right|, & \text{otherwise}
+  \end{cases} 
+$$
+
+$\forall k \in \mathcal{K}$ and $\forall c \in \mathcal{C}$, with
+the probabilistic experiment at $m$ distributed uniformly in 
+$\mathcal{M}$.
+
+This suggests that maybe an analogous version of 
+the Shannon theorem for perfect security against key recovery 
+could be stated when the message space is smaller than the 
+key space.
+
+\subsection{Both perfectly secure and perfectly secure against key recovery are
+compatible}
+
+We know that the one-time-pad cipher is perfectly secure. 
+This means that $\forall m_0, m_1 \in \mathcal{M}$ and 
+$\forall c \in \mathcal{C}$
+
+$$ Pr[E(k, m_0) = c] = Pr[E(k, m_1) = c] $$
+
+where the probability runs over the choice of $k$, which is chosen 
+uniformly at random in $\mathcal{K}$.
+
+Given that the spaces $\mathcal{M}$ and $\mathcal{K}$ are the same
+and that the $E$ function is symmetric due to the $xor$ 
+commutativity, we can transform the probabilistic experiment 
+above to run over the message space $\mathcal{M}$ given two keys 
+by swapping the function parameters while preserving the equality. 
+
+This turns out to be the condition for perfect security against 
+key recovery also satisfied for the one-time-pad.
+
+\section{A wrong attempt of semantically secure RSA scheme}
+
+Consider the following public key encryption scheme 
+$\mathcal{E} = (G, E, D)$:
+
+\begin{scheme}
+\begin{itemize}
+  \item $G(\cdot)$: Same as RSA, namely given a (public) odd 
+    integer $e$, and a parameter size $\ell$, generate $p, q$
+    prime numbers of $\ell$ bits such that $gcd(e, p-1) = 1$, 
+    $gcd(e, q-1) = 1$.
+
+    Compute $N=p \cdot q$, $\varphi (N) = (p - 1) \cdot (q - 1)$
+    and $d = e^{-1}$ mod $\varphi (N)$.
+
+    Output $pk = (N, e)$ as public key and $sk = (N, d)$ as 
+    private key.
+
+    The message space is $\mathcal{M} = \mathbb{Z}_N^*$ 
+    and the ciphertext space is 
+    $\mathcal{C} = (\mathbb{Z}_N^*)^2$.
+  \item $E(pk, m)$: Choose a random $x \in \mathbb{Z}_N^*$,
+    define
+
+    $$c_1 = x^e \text{ mod } N$$
+
+    and 
+
+    $$c_2 = x \cdot m \text{ mod } N$$
+
+    and output the ciphertext $c = (c_1, c_2)$.
+  \item $D(sk, c)$: Compute 
+    $\widetilde{m} = c_2/c_1^d \text{ mod } N$ 
+    and output $\widetilde{m}$.
+\end{itemize}
+\end{scheme}
+
+\subsection{It is a valid public key encryption scheme}
+
+Let $m \in \mathcal{M}$ be a message and $pk = (N, e)$, 
+$sk = (N, d)$ the corresponding public and secret keys 
+generated by $G$.
+
+When performing an encryption for $m$ as $E(pk, m)$, let 
+$x$ be the randomly chosen element from $\mathbb{Z}_N^*$, so
+the resulting ciphertext is
+
+$$c = (x^e \text{ mod } N, x \cdot m \text{ mod } N)$$
+
+Let us check that we can recover the original $m$:
+
+$$
+  D(sk, c) = 
+  \frac{ x \cdot m}
+    {\left( x^e \right)^d} \text{ mod } N =
+$$
+
+As 
+$(x^a)^b = x^{a \cdot b \text{ mod } \varphi(N)} \text{ mod } N$,
+and $d = e^{-1} \text{ mod } \varphi(N)$, the denominator
+reduces into $x$:
+
+$$
+  \left( x^e \right)^d \text{ mod } N =
+    x^{e \cdot e^{-1} \text{ mod } \varphi(N)} \text{ mod } N =
+      x
+$$
+
+so the whole expression becomes
+
+$$
+  D(sk, c) = \frac{x \cdot m}{x} \text{ mod } N = m
+$$
+
+and this means that
+
+$$Pr[D(sk, E(pk, m)) = m] = 1$$
+
+when $m$ is randomly chosen from $\mathcal{M}$, because it 
+already holds $\forall m \in \mathcal{M}$.
+
+\subsection{It is not semantically secure}
+
+Consider an adversary $\mathcal{A}$ for the semantically secure 
+attack game which receives $pk = (N, e)$ from the challenger, 
+computes two different messages $m_0, m_1$ and sends them 
+to the challenger.
+
+The challenger replies with a ciphertext $c = (c_1, c_2)$ and
+$\mathcal{A}$ computes 
+
+$$x_i = c_2 / m_i \text{ mod } N$$
+
+for each $i \in \{0,1\}$.
+
+By checking which one satisfies 
+$x_i^e \text{ mod } N = c_1$, it can be distinguished which
+one of $m_0, m_1$ has lead to the received ciphertext.
+
+Note that, under this conditions, it is not possible to have
+two different $x_0, x_1 \in \mathbb{Z}_N^*$ such that
+$x_0^e = x_1^e$. Otherwise, it would contradict 
+$(x^e)^d = x \text{ mod } N$ $\forall x \in \mathbb{Z}_N^*$
+, which is necessary for this scheme to work, so
+
+$$SSAdv\left[\mathcal{A}, \mathcal{E}\right] = 1$$
+
+$\mathcal{A}$ would be an efficient adversary (i.e. it performs
+the kind of operations that the challenger is also performing 
+in an efficient way) with a far from negligible advantage in the game, 
+so this scheme is not semantically secure.
+
+\section{A DDH-based public key encryption scheme for bits}
+
+Let $\mathbb{G}$ be a group of order $q$ and $g$ a generator
+of the group. Consider the following public key encryption
+scheme over message and ciphertext spaces 
+$\mathcal{M} = \{0, 1\}$ and $\mathcal{C} = \mathbb{G}^2$.
+
+\begin{scheme}
+\begin{itemize}
+  \item $G(\cdot)$: Chooses $\alpha$ at random in 
+    $\mathbb{Z}_q$ and defines $u = g^\alpha$.
+    The public key is $pk = u$ and the secret key is
+    $sk = \alpha$.
+  \item $E(pk, m)$: First, it chooses a random 
+    $\beta \in \mathbb{Z}_q$ and defines 
+    $c_1 = g^\beta$. Now:
+
+    \begin{itemize}
+        \item If $b = 0$, it defines $c_2 = u^\beta$.
+        \item If $b = 1$, it takes a random 
+          $\gamma \in \mathbb{Z}_q$, and defines 
+          $c_2 = g^\gamma$.
+    \end{itemize}
+
+    The ciphertext is $c = (c_1, c_2)$.
+  \item $D(sk, c)$: ?
+\end{itemize}
+\end{scheme}
+
+\subsection{The decryption algorithm}
+
+Consider the decryption algorithm to be defined as follows:
+
+$$D(\alpha, (c_1, c_2)) = 
+  \begin{cases}
+    0, & \text{if } c_1^\alpha = c_2 \\ 
+    1, & \text{otherwise}
+  \end{cases}
+$$
+
+The criteria for assuming when the encryption algorithm 
+has taken the branch corresponding to $0$ is based on 
+the fact that
+
+$$
+  c_1^\alpha = 
+    (g^\beta)^\alpha = (g^\alpha)^\beta = u^\beta = c_2
+$$
+
+which will be the case when $E$ is ciphering the bit $0$ and
+not when ciphering the bit $1$ unless, due to 
+$\mathbb{G}=\left<g\right>$ 
+being a group of order $q$, the randomly chosen 
+$\gamma \in \mathbb{G}$ has been exactly the element 
+$\alpha \cdot \beta$. This leads to the decryption
+algorithm to output $0$ when the original message was $1$.
+
+There is one element out of $q$ that produces this failure
+and, as the choice is uniformly distributed, it will appear with
+probability $1 / q$. This means that
+
+$$Pr[D(sk, E(pk, b)) = b] = 1 - 1/q$$
+
+which can be accepted by weakening the definition of public 
+key encryption scheme and allowing it to fail with negligible
+probability.
+
+\subsection{The scheme is CPA-secure}
+
+Given an adversary $\mathcal{A}$ of the SS game, we can define 
+an adversary $\mathcal{B}$ for the DDH game which plays also the
+role of challenger for $\mathcal{A}$ in the former game:
+
+\begin{itemize}
+  \item The DDH challenger chooses $\alpha$ and $\beta$ at random
+    from $\mathbb{Z}_q$. It also computes $u = g^\alpha$ and 
+    $v = g^\beta$.
+
+  \item If it is playing the DDH experiment $b=0$, it defines
+    $w=g^{\alpha\beta}$, otherwise it chooses a random
+    $\gamma$ from $\mathbb{Z}_q$ and defines $w=g^\gamma$.
+
+  \item The DDH challenger sends the triple $(u, v, w)$
+    to $\mathcal{B}$.
+
+  \item $\mathcal{B}$ forwards $u$ to $\mathcal{A}$ as the public key.
+
+  \item $\mathcal{A}$ computes two messages $m_0, m_1$ and sends
+      them to $\mathcal{B}$.
+
+  \item $\mathcal{B}$ defines $c=E(u, m_{b'})$ and replies to $\mathcal{A}$
+        with it, being $b' \in \{0,1\}$ the SS experiment being played. The 
+        encryption with $E$ is done assuming $v$ as $g^\beta$ and $w$ as
+        $u^\beta$.
+
+  \item $\mathcal{A}$ outputs $\hat{b'}$ as a guess for the SS experiment
+    being played.
+  \item $\mathcal{B}$ outputs $\hat{b}$ as a guess for the DDH experiment
+    being played, where 
+
+    $$\hat{b} = \begin{cases} 
+      0, & \text{if } b' = \hat{b'} \\
+      1, & \text{otherwise}
+    \end{cases} $$
+\end{itemize}
+
+The explained game can be summarized with the following diagram:
+
+\[
+\begin{array}{ccccc}
+{\rm DDH \ Challenger} & 
+  & \mathcal{B} & 
+  & \mathcal{A}\\
+\multirow{2}{*}
+{\framebox(80,250){}}
+&
+&
+\multirow{2}{*}
+{\framebox(80,250){}}
+&
+& 
+\multirow{2}{*}
+{\framebox(80,250){}
+}\\
+~
+  {\rm Exp.} \ b \in \{0,1\}
+&
+& {\rm Exp. } \ b' \in \{0,1\}
+&
+&
+\\[10pt]
+  \alpha \stackrel{R}{\leftarrow} \mathbb{Z}_q, 
+  \beta \stackrel{R}{\leftarrow} \mathbb{Z}_q
+&
+&
+&
+&
+\\ 
+~
+u \coloneqq g^\alpha, v \coloneqq g^\beta
+& 
+&
+&
+&
+\\[10pt]
+~
+  {\rm If} \ b = 0
+& 
+&
+&
+&
+\\
+~ 
+w \coloneqq g^{\alpha\beta}
+&
+&
+&
+& 
+\\
+~ 
+{\rm otherwise}
+&
+&
+&
+& 
+\\
+~ 
+\gamma \stackrel{R}{\leftarrow} \mathbb{Z}_q, 
+w \coloneqq g^\gamma
+&
+&
+&
+& 
+\\[10pt]
+~ 
+& \rightgoing{(u, v, w)}{40}
+& pk \coloneqq u
+& \rightgoing{pk}{40}
+& 
+\\[10pt]
+~
+&
+& 
+&\leftgoing{(m_{0},m_{1})}{40}
+&
+\\
+~
+&
+&
+&\rightgoing{c}{40}
+&
+\\[10pt]
+~
+&
+& {\rm If}\ b'=\hat{b'} 
+&
+&
+\\
+~
+&
+& \hat{b} \coloneqq 0
+&
+&
+\\
+~
+&
+& {\rm otherwise}
+&
+&
+\\
+~
+&
+& \hat{b} \coloneqq 1
+&
+&
+\\
+\\
+&
+&
+\downarrow
+&
+&
+\downarrow
+\\
+&
+&
+\hat{b}
+&
+&
+\hat{b'}
+\\
+\end{array}
+\]
+
+On the one hand, being $W_1^{DDH}$ the event of $\mathcal{B}$ 
+outputting $1$ at the DDH experiment $1$, the ciphered messages 
+sent to $\mathcal{A}$ are completely random because $w$ itself is 
+random, so we expect that its guess is also random, and also 
+the guess of $\mathcal{B}$:
+
+$$Pr\left[W_1^{DDH}\right] = 1 / 2$$
+
+On the other hand, with $W_0^{DDH}$ being the event of 
+$\mathcal{B}$ outputting $1$ at the DDH experiment $0$,
+we can relate its probability with the SS experiments 
+as follows:
+
+\begin{multline*}
+$$
+  Pr\left[W_0^{DDH}\right] = 
+  Pr\left[ \hat{b} = 1 | b = 0 \right] =
+  Pr\left[ b' \neq \hat{b'} | b = 0 \right] = \\ 
+  Pr\left[ b' = 0 \right] Pr \left[ \hat{b'} = 1 | b' = 0 \right] +
+    Pr\left[ b' = 1 \right] Pr \left[ \hat{b'} = 0 | b' = 1 \right] = \\ 
+  1/2 \left(1 -
+    Pr \left[ \hat{b'} = 1 | b' = 1 \right] +
+    Pr \left[ \hat{b'} = 1 | b' = 0 \right]
+  \right)
+$$
+\end{multline*}
+
+As $W_i^{SS}$ is the event of $\mathcal{A}$
+outputting $1$ in the SS experiment $i$ for $i \in \{0,1\}$,
+we have 
+
+$$
+  Pr\left[W_0^{DDH}\right] =
+  1/2 - 1/2 \left( Pr\left[W_1^{SS} \right] 
+    - Pr\left[W_0^{SS}\right]\right)
+$$
+
+and the adversaries corresponding advantages can be related as follows:
+
+\begin{multline*}
+$$
+  DDHAdv\left[\mathcal{B}, \mathcal{E}\right] =
+    \left|Pr\left[W_1^{DDH}\right] - Pr\left[W_0^{DDH}\right]\right| \\ =
+    1\slash2 \left|Pr\left[W_1^{SS}\right] - Pr\left[W_0^{SS}\right]\right| =
+    1\slash2 \cdot SSAdv\left[\mathcal{A}, \mathcal{E}\right]
+$$
+\end{multline*}
+
+If the decissional Diffie-Hellman assumption holds for 
+$\mathbb{G}$, then 
+$DDHAdv\left[\mathcal{B}, \mathcal{E}\right]$ is negligible 
+and, due to the relation between both advantages, 
+$SSAdv\left[\mathcal{A}, \mathcal{E}\right]$ is also negligible,
+thus $\mathcal{E}$ is SS-secure.
+
+Finally, we know by a theorem that if a public-key encryption scheme is
+semantically secure, then it is also CPA secure.
+\end{document}
