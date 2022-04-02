@@ -33,10 +33,10 @@ Some exercises delivered during a master's degree in formal methods
 - [Pseudo-random generators, pseudo-random functions and secret-key encryption.](./cryptographic-protocols-2/cryptographic-protocols-2.pdf)
 - [Hash functions, digital signatures and zero knowledge proofs.](./cryptographic-protocols-3/cryptographic-protocols-3.pdf)
 
-## Quantum computing
+## Quantum computing (Spanish)
 
-- [Introduction to quantum computing](./quantum-computing-1/quantum-computing-1.pdf)
-- [Error correction codes](./quantum-computing-2/quantum-computing-2.pdf)
-- [Shor's algorithm and quantum circuits](./quantum-computing-3/quantum-computing-3.pdf)
-- [Quantum teleportation](./entangled-exchange-example/entangled-exchange-example.pdf)
+- [Introduction to quantum mechanics.](./quantum-computing-1/quantum-computing-1.pdf)
+- [Quantum cryptography and error correction codes.](./quantum-computing-2/quantum-computing-2.pdf)
+- [Shor's algorithm and quantum computing.](./quantum-computing-3/quantum-computing-3.pdf)
+- [Quantum teleportation.](./entangled-exchange-example/entangled-exchange-example.pdf)
 
