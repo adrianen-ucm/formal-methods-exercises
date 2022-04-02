@@ -1,0 +1,174 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{bbold}
+
+\title{%
+  Teleportación de estados cuánticos \\ 
+  \large Ejemplo de intercambio de entrelazamiento
+}
+\author{
+  Daniela Ferreiro \and 
+  Adrián Enríquez \and 
+  Daniel Trujillo
+}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+Consideremos un estado formado por cuatro qubits,
+$|\beta_{01}\rangle \otimes |\beta_{00}\rangle$, donde el segundo
+y tercero pertenecen a Alice, el cuarto a Bob, el primero podría
+pertenecer a otra persona. $|\beta_{00}\rangle$
+y $\beta_{01}\rangle$ son los siguientes estados de la base de Bell:
+
+\begin{align*}
+  |\beta_{00}\rangle &= 
+    \frac{1}{\sqrt{2}}(|00\rangle + |11\rangle) \\
+  |\beta_{01}\rangle &= 
+    \frac{1}{\sqrt{2}}(|01\rangle + |10\rangle) \\
+\end{align*}
+
+Los tres últimos qubits cumplen la configuración requerida para
+realizar la teleportación del primero de ellos a Bob e,
+intuitivamente, como el qubit teleportado está entrelazado con el
+primero, es el qubit de Bob el que debería de terminar entrelazado
+con este. Vamos a aplicar el protocolo paso a paso para ver cómo
+evoluciona el estado compuesto.
+
+En primer lugar, al estado inicial
+
+\begin{align*}
+  |\psi_0\rangle &= |\beta_{01}\rangle \otimes |\beta_{00}\rangle \\ 
+         &= \frac{1}{2}\Big(
+            |0100\rangle + |0111\rangle -|1000\rangle - |1011\rangle
+         \Big)
+\end{align*}
+
+se le aplicaría una puerta CNOT en los qubits 2 y 3:
+
+\begin{align*}
+  |\psi_1\rangle 
+        &= \Big(
+          \mathbb{1} 
+          \otimes \mathcal{U} _\text{CNOT}
+          \otimes \mathbb{1}
+          \Big)|\psi_0\rangle \\ 
+        &= \frac{1}{2}\Big(
+          |0110\rangle + |0101\rangle -|1000\rangle - |1011\rangle
+        \Big)
+\end{align*}
+
+A continuación, se aplicaría una puerta Hadamard en el segundo:
+
+\begin{align*}
+  |\psi_2\rangle 
+        &= \Big(
+          \mathbb{1}
+          \otimes H
+          \otimes \mathbb{1}
+          \otimes \mathbb{1}
+          \Big)|\psi_1\rangle \\ 
+        &= \frac{1}{2}\Big(
+          |0110\rangle 
+          + |0101\rangle 
+          - |1000\rangle 
+          - |1011\rangle
+        \Big) \\ 
+        &= \frac{1}{2}\Big(
+          |0\rangle \otimes \frac{1}{\sqrt{2}}(
+            |0\rangle - |1\rangle
+          ) \otimes|10\rangle 
+          + |0\rangle \otimes \frac{1}{\sqrt{2}}(
+            |0\rangle - |1\rangle
+          ) \otimes|01\rangle \\ 
+          &\;\;\;\;- |1\rangle \otimes \frac{1}{\sqrt{2}}(
+            |0\rangle + |1\rangle
+          ) \otimes|00\rangle 
+          - |1\rangle \otimes \frac{1}{\sqrt{2}}(
+            |0\rangle + |1\rangle
+          ) \otimes |11\rangle
+        \Big) \\ 
+        &= \frac{1}{2\sqrt{2}}\Big(
+          |0010\rangle - |0110\rangle + |0001\rangle 
+          - |0101\rangle \\ 
+        &\;\;\;\; - |1000\rangle - |1100\rangle 
+          - |1011\rangle - |1111\rangle
+        \Big)
+\end{align*}
+
+En este punto, Alice mediría sus qubits con la medida asociada a la
+base canónica. No vamos a mostrar los cálculos pero, como sucede
+siempre en este protocolo, cada una de las cuatro medidas tiene la
+misma probabilidad de salir: $\frac{1}{4}$.
+
+En caso de que saliese $00$, el estado cambiaría como sigue:
+
+\begin{align*}
+  |\psi_3^{00}\rangle 
+        &= \frac{1/(2\sqrt{2})}{\sqrt{1/4}}\Big(
+          \mathbb{1}
+          \otimes |0 \rangle\langle 0|
+          \otimes \mathbb{1}
+          \Big)|\psi_2\rangle \\ 
+        &= \frac{1}{\sqrt{2}}\Big(
+          |0001\rangle 
+          - |1000\rangle 
+        \Big) \\ 
+\end{align*}
+
+Alice transmitiría el resultado de la medida a Bob, que consiste en
+$2$ bits de información clásica, y Bob sabría que ya tiene el estado
+teleportado. Se puede apreciar que el estado de los qubits de Alice
+ha terminado siendo $|00\rangle$, mientras que el de Bob junto con
+el restante $\frac{1}{\sqrt{2}}(|01\rangle - |10\rangle)
+= |\beta_{01}\rangle$.
+
+En caso de que saliese $01$, el estado cambiaría como sigue:
+
+\begin{align*}
+  |\psi_3^{01}\rangle 
+        &= \frac{1/(2\sqrt{2})}{\sqrt{1/4}}\Big(
+          \mathbb{1}
+          \otimes |0 \rangle\langle 1|
+          \otimes \mathbb{1}
+          \Big)|\psi_2\rangle \\ 
+        &= \frac{1}{\sqrt{2}}\Big(
+          |0010\rangle 
+          - |1011\rangle 
+        \Big) \\ 
+\end{align*}
+
+Alice transmitiría el resultado a Bob, y este sabría que tiene que
+aplicar una puerta $X$ a su qubit para que tenga el estado
+teleportado por Alice:
+
+\begin{align*}
+  |\psi_4^{01}\rangle 
+        &= \Big(
+          \mathbb{1}
+          \otimes \mathbb{1}
+          \otimes \mathbb{1}
+          \otimes X
+          \Big)|\psi_3^{01}\rangle \\ 
+        &= \frac{1}{\sqrt{2}}\Big(
+          |0011\rangle 
+          - |1010\rangle 
+        \Big) \\ 
+\end{align*}
+
+En este caso, el estado de los qubits de Alice ha terminado siendo
+$|01\rangle$, mientras que el de Bob junto con el restante es de
+nuevo $\frac{1}{\sqrt{2}}(|01\rangle - |10\rangle)
+= |\beta_{01}\rangle$.
+
+El resto de casos serían análogos, dando lugar al mismo resultado:
+los qubits de Alice terminan con un estado de la base canónica,
+mientras que el primer qubit junto con el de Bob terminan en el
+estado entrelazado $|\beta_{01}\rangle$.
+
+\end{document}

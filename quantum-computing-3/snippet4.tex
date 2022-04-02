@@ -1,0 +1,4 @@
+\begin{minted}{haskell}
+check j = abs (614 - j * ((2 ** 11) / 10)) <= 1 / 2
+head . filter check $ [0..]
+\end{minted}

@@ -1,0 +1,901 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{bbold}
+
+\title{Ejercicios de introducción a la física cuántica}
+\author{Adrián Enríquez Ballester}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\subsection*{Ejercicio 1}
+
+Demostrar que una matriz normal $U$ es unitaria si y sólo
+si existe una matriz hermítica $H$ tal que $U = \text{exp}
+(iH)$.
+
+\subsubsection*{Respuesta}
+
+Para demostrar la primera implicación, supongamos que $U$ 
+es unitaria. Como esta es normal, sea $n$ el número de 
+columnas de $U$, existe una base $\{v_j\}_{j=1}^n$ 
+ortonormal de $\mathbb{C}^n$ donde cada $v_j$ es un 
+autovector con autovalor $\lambda_j$ de $U$, y por tanto
+
+$$
+U = \sum_{j=1}^n \lambda_j |v_j \rangle\langle v_j|
+$$
+
+Sea $H$ la matriz definida como 
+
+$$
+  H \coloneqq \sum_{j=1}^n \frac{\text{ln}(\lambda_j)}{i} 
+    |v_j \rangle\langle v_j|
+$$
+
+podemos comprobar que
+
+$$
+\text{exp}(iH) 
+    = \sum_{j=1}^n e^{i\text{ln}(\lambda_j)/i}
+      |v_j \rangle\langle v_j|
+    = \sum_{j=1}^n e^{\text{ln}(\lambda_j)}
+      |v_j \rangle\langle v_j|
+    = \sum_{j=1}^n \lambda_j
+      |v_j \rangle\langle v_j|
+    = U
+$$
+
+por lo que sólo quedaría verificar que $H$ es hermítica.
+
+Sabemos que 
+$
+\text{ln}(\lambda_j) = \ln(|\lambda_j|) + i\theta_j
+  \text{ para un valor } \theta_j \in (-\pi, \pi] 
+$, y también que $U$ es normal y por tanto sus autovalores 
+han de tener módulo $1$, lo cual implica que 
+
+$$
+  \frac{\text{ln}(\lambda_j)}{i}
+    = \frac{\text{ln}(|\lambda_j|) + i\theta_j}{i}
+    = \frac{\text{ln}(1) + i\theta_j}{i}
+    = \frac{i\theta_j}{i}
+    = \theta_j
+$$
+
+y, al tratarse de valores en $\mathbb{R}$, permite comprobar que
+$H$ es hermítica:
+
+$$
+  H^\dagger 
+    = \sum_{j=1}^n \overline{\theta_j} 
+        (|v_j \rangle\langle v_j|)^\dagger
+    = \sum_{j=1}^n \theta_j 
+      |v_j \rangle\langle v_j|
+    = H
+$$
+
+En cuanto a la implicación restante, supongamos que existe 
+una matriz $H$ hermítica tal que $U = \text{exp}(iH)$.
+
+El hecho de que $H$ sea hermítica implica que también 
+es normal, por lo que existe una base $\{v_j\}_{j=1}^n$ 
+ortonormal de $\mathbb{C}^n$ donde cada $v_j$ es un 
+autovector con autovalor $\theta_j$ de $H$, y por tanto
+
+$$
+  H = \sum_{j=1}^n \theta_j |v_j \rangle\langle v_j|
+$$
+
+Además, como $H$ es hermítica, sabemos que cada uno de
+estos autovalores $\theta_j$ ha de estar en $\mathbb{R}$.
+También tenemos que
+
+$$
+  U = \text{exp}(iH) 
+    = \sum_{j=1}^n e^{i \theta_j} |v_j \rangle\langle v_j|
+$$
+
+con lo cual podemos proceder a comprobar que $U$ es unitaria:
+
+\begin{align*}
+  UU^\dagger &= \Big(
+      \sum_{j=1}^n e^{i \theta_j} 
+        |v_j \rangle\langle v_j|
+    \Big) \Big(
+      \sum_{k=1}^n \overline{e^{i \theta_k}} 
+        (|v_k \rangle\langle v_k|)^\dagger
+      \Big) \\
+    &= \sum_{j,k=1}^n e^{i \theta_j}\overline{e^{i \theta_k}} 
+        |v_j \rangle\langle v_j|v_k \rangle \langle v_k| \\
+    &= \sum_{j,k=1}^n e^{i \theta_j}\overline{e^{i \theta_k}} 
+        |v_j \rangle \delta_{jk} \langle v_k| \\
+    &= \sum_{j=1}^n e^{i \theta_j}\overline{e^{i \theta_j}} 
+        |v_j \rangle \langle v_j| \\
+    &= \sum_{j=1}^n |e^{i \theta_j}|^2 
+        |v_j \rangle \langle v_j| \\
+    &= \sum_{j=1}^n |v_j \rangle \langle v_j| \\
+    &= \mathbb{1}
+\end{align*}
+
+puesto que para cada $j$ se cumple
+$
+|e^{i\theta_j}|^2
+  = |\text{cos}(\theta_j) + i\text{sin}(\theta_j)|^2
+  = \text{cos}^2(\theta_j) + \text{sin}^2(\theta_j)
+  = 1
+$.
+
+\subsection*{Ejercicio 2}
+
+¿Cuál es la probabilidad de obtener cada salida, y el estado
+después de la medida si el estado inicial 
+(de dos partes A y B)
+es $|\Phi_+ \rangle_{AB} = \frac{1}{\sqrt{2}}(|00\rangle + 
+|11\rangle)$, y tanto Alice como Bob miden en la base 
+$|+\rangle$, $|-\rangle$?
+
+\subsubsection*{Respuesta}
+
+Las matrices con las que se está midiendo en el sistema
+compuesto son:
+
+\begin{align*}
+  P_{++} &= |+\rangle\langle+| \otimes |+\rangle\langle+| \\
+  P_{--} &= |-\rangle\langle-| \otimes |-\rangle\langle-| \\
+  P_{+-} &= |+\rangle\langle+| \otimes |-\rangle\langle-| \\
+  P_{-+} &= |-\rangle\langle-| \otimes |+\rangle\langle+| \\
+\end{align*}
+
+Al tratarse de medidas proyectivas, podemos calcular la 
+probabilidad de que salga $++$ como 
+
+\begin{align*}
+  \text{p}(++) &= \langle \Phi_+ | P_{++} |\Phi_+ \rangle \\ 
+    &= \frac{1}{2}
+        \Big( \langle 00| + \langle 11| \Big)
+        P_{++}
+        \Big(|00\rangle + |11\rangle\Big) \\
+    &= \frac{1}{2}\Big(  
+      \langle 00|P_{++}|00\rangle + \langle 00|P_{++}|11\rangle +
+      \langle 11|P_{++}|00\rangle + \langle 11|P_{++}|11\rangle
+    \Big) \\
+    &= \frac{1}{2}\Big(
+      \frac{1}{4} + \frac{1}{4} + \frac{1}{4} + \frac{1}{4}
+    \Big) \\ 
+    &= \frac{1}{2}
+\end{align*}
+
+puesto que 
+
+\begin{align*}
+  \langle 00|P_{++}|00\rangle 
+    &= \langle 0|+\rangle\langle +|0\rangle
+      \otimes \langle 0|+\rangle\langle +|0\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+  \langle 00|P_{++}|11\rangle 
+    &= \langle 0|+\rangle\langle +|1\rangle
+      \otimes \langle 0|+\rangle\langle +|1\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+  \langle 11|P_{++}|00\rangle 
+    &= \langle 1|+\rangle\langle +|0\rangle
+      \otimes \langle 1|+\rangle\langle +|0\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+  \langle 11|P_{++}|11\rangle 
+    &= \langle 1|+\rangle\langle +|1\rangle
+      \otimes \langle 1|+\rangle\langle +|1\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+\end{align*}
+
+En caso de que saliese $++$, el estado final sería
+
+\begin{align*}
+  |\psi_f\rangle &= \frac{P_{++}|\Phi_+\rangle}{\sqrt{p(++)}} \\ 
+    &= \sqrt{2} \frac{1}{\sqrt{2}} 
+      P_{++}\Big(|00\rangle + |11\rangle\Big) \\
+    &= \Big( 
+      |+\rangle\langle+|\otimes|+\rangle\langle+| 
+    \Big)|00\rangle + 
+    \Big( 
+      |+\rangle\langle+|\otimes|+\rangle\langle+| 
+    \Big)|11\rangle \\
+    &= \Big(
+      |+\rangle\langle +|0\rangle \otimes 
+      |+\rangle\langle +|0\rangle\Big
+    ) +
+    \Big(
+      |+\rangle\langle +|1\rangle \otimes 
+      |+\rangle\langle +|1\rangle
+    \Big)\\
+    &= \Big(
+      |+\rangle\frac{1}{\sqrt{2}} \otimes 
+      |+\rangle\frac{1}{\sqrt{2}}
+    \Big) +
+    \Big(
+      |+\rangle\frac{1}{\sqrt{2}} \otimes 
+      |+\rangle\frac{1}{\sqrt{2}}
+    \Big) \\
+    &= \frac{1}{2}|++\rangle +
+      \frac{1}{2}|++\rangle \\
+    &= |++\rangle
+\end{align*}
+
+Por otra parte, la probabilidad de que salga $--$ es 
+
+\begin{align*}
+  \text{p}(--) &= \langle \Phi_+ | P_{--}|\Phi_+ \rangle \\ 
+    &= \frac{1}{2}\Big( \langle 00| + \langle 11| \Big)
+        P_{--}
+        \Big(|00\rangle + |11\rangle\Big) \\
+    &= \frac{1}{2}\Big(  
+      \langle 00|P_{--}|00\rangle + \langle 00|P_{--}|11\rangle +
+      \langle 11|P_{--}|00\rangle + \langle 11|P_{--}|11\rangle
+    \Big) \\
+    &= \frac{1}{2}\Big(
+      \frac{1}{4} + \frac{1}{4} + \frac{1}{4} + \frac{1}{4}
+    \Big) \\ 
+    &= \frac{1}{2}
+\end{align*}
+
+puesto que 
+
+\begin{align*}
+  \langle 00|P_{--}|00\rangle 
+    &= \langle 0|-\rangle\langle -|0\rangle
+      \otimes \langle 0|-\rangle\langle -|0\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+  \langle 00|P_{--}|11\rangle 
+    &= \langle 0|-\rangle\langle -|1\rangle
+      \otimes \langle 0|-\rangle\langle -|1\rangle
+    = \frac{1}{\sqrt{2}}(-\frac{1}{\sqrt{2}})
+      \otimes \frac{1}{\sqrt{2}}(-\frac{1}{\sqrt{2}})
+    = \frac{1}{4} \\
+  \langle 11|P_{--}|00\rangle 
+    &= \langle 1|-\rangle\langle -|0\rangle
+      \otimes \langle 1|-\rangle\langle -|0\rangle
+    = (-\frac{1}{\sqrt{2}})\frac{1}{\sqrt{2}}
+      \otimes (-\frac{1}{\sqrt{2}})\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+  \langle 11|P_{--}|11\rangle 
+    &= \langle 1|-\rangle\langle -|1\rangle
+      \otimes \langle 1|-\rangle\langle -|1\rangle
+    = (-\frac{1}{\sqrt{2}})(-\frac{1}{\sqrt{2}})
+      \otimes 
+      (-\frac{1}{\sqrt{2}})(-\frac{1}{\sqrt{2}})
+    = \frac{1}{4} \\
+\end{align*}
+
+El estado final en este caso sería
+
+\begin{align*}
+  |\psi_f\rangle &= \frac{P_{--}|\Phi_+\rangle}{\sqrt{p(--)}} \\ 
+    &= \sqrt{2} \frac{1}{\sqrt{2}} 
+      P_{--}\Big(|00\rangle + |11\rangle\Big) \\
+    &= \Big( 
+      |-\rangle\langle-|\otimes|-\rangle\langle-| 
+    \Big)|00\rangle + 
+    \Big( 
+      |-\rangle\langle-|\otimes|-\rangle\langle-| 
+    \Big)|11\rangle \\
+    &= \Big(
+      |-\rangle\langle -|0\rangle \otimes 
+      |-\rangle\langle -|0\rangle
+    \Big) + \Big(
+      |-\rangle\langle -|1\rangle \otimes 
+      |-\rangle\langle -|1\rangle 
+    \Big)\\
+    &= \Big(
+      |-\rangle\frac{1}{\sqrt{2}}\otimes 
+      |-\rangle\frac{1}{\sqrt{2}} 
+    \Big) + \Big(
+      |-\rangle(-\frac{1}{\sqrt{2}}) \otimes 
+      |-\rangle(-\frac{1}{\sqrt{2}}) 
+    \Big) \\
+    &= \frac{1}{2}|--\rangle +
+      \frac{1}{2}|--\rangle \\
+    &= |--\rangle
+\end{align*}
+
+Por último, en cuanto al resto de medidas, ambas tienen 
+probabilidad nula de salir:
+
+\begin{align*}
+  \text{p}(+-) &= \langle \Phi_+ | P_{+-} |\Phi_+ \rangle \\ 
+    &= \frac{1}{2}\Big( \langle 00| + \langle 11| \Big)
+        P_{+-}
+        \Big(|00\rangle + |11\rangle\Big) \\
+    &= \frac{1}{2}\Big(  
+      \langle 00|P_{+-}|00\rangle + \langle 00|P_{+-}|11\rangle +
+      \langle 11|P_{+-}|00\rangle + \langle 11|P_{+-}|11\rangle
+    \Big) \\
+    &= \frac{1}{2}\Big(
+      \frac{1}{4} - \frac{1}{4} - \frac{1}{4} + \frac{1}{4}
+    \Big) \\ 
+    &= 0 \\
+  \text{p}(-+) &= \langle \Phi_+ | P_{-+} |\Phi_+ \rangle \\ 
+    &= \frac{1}{2}\Big( \langle 00| + \langle 11| \Big)
+        P_{-+}
+        \Big(|00\rangle + |11\rangle\Big) \\
+    &= \frac{1}{2}\Big(  
+      \langle 00|P_{-+}|00\rangle + \langle 00|P_{-+}|11\rangle +
+      \langle 11|P_{-+}|00\rangle + \langle 11|P_{-+}|11\rangle
+    \Big) \\
+    &= \frac{1}{2}\Big(
+      \frac{1}{4} - \frac{1}{4} - \frac{1}{4} + \frac{1}{4}
+    \Big) \\ 
+    &= 0 \\
+\end{align*}
+
+puesto que
+
+\begin{align*}
+  \langle 00|P_{+-}|00\rangle 
+    &= \langle 0|+\rangle\langle +|0\rangle
+      \otimes \langle 0|-\rangle\langle -|0\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+  \langle 00|P_{+-}|11\rangle 
+    &= \langle 0|+\rangle\langle +|1\rangle
+      \otimes \langle 0|-\rangle\langle -|1\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}(-\frac{1}{\sqrt{2}})
+    = -\frac{1}{4} \\
+  \langle 11|P_{+-}|00\rangle 
+    &= \langle 1|+\rangle\langle +|0\rangle
+      \otimes \langle 1|-\rangle\langle -|0\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes (-\frac{1}{\sqrt{2}})\frac{1}{\sqrt{2}}
+    = -\frac{1}{4} \\
+  \langle 11|P_{+-}|11\rangle 
+    &= \langle 1|+\rangle\langle +|1\rangle
+      \otimes \langle 1|-\rangle\langle -|1\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes (-\frac{1}{\sqrt{2}})(-\frac{1}{\sqrt{2}})
+    = \frac{1}{4} \\
+\end{align*}
+
+y
+
+\begin{align*}
+  \langle 00|P_{-+}|00\rangle 
+    &= \langle 0|-\rangle\langle -|0\rangle
+      \otimes \langle 0|+\rangle\langle +|0\rangle
+    = \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+  \langle 00|P_{-+}|11\rangle 
+    &= \langle 0|-\rangle\langle -|1\rangle
+      \otimes \langle 0|+\rangle\langle +|1\rangle
+    = \frac{1}{\sqrt{2}}(-\frac{1}{\sqrt{2}})
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = -\frac{1}{4} \\
+  \langle 11|P_{-+}|00\rangle 
+    &= \langle 1|-\rangle\langle -|0\rangle
+      \otimes \langle 1|+\rangle\langle +|0\rangle
+    = (-\frac{1}{\sqrt{2}})\frac{1}{\sqrt{2}}
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = -\frac{1}{4} \\
+  \langle 11|P_{-+}|11\rangle 
+    &= \langle 1|-\rangle\langle -|1\rangle
+      \otimes \langle 1|+\rangle\langle +|1\rangle
+    = (-\frac{1}{\sqrt{2}})(-\frac{1}{\sqrt{2}})
+      \otimes \frac{1}{\sqrt{2}}\frac{1}{\sqrt{2}}
+    = \frac{1}{4} \\
+\end{align*}
+
+\subsection*{Ejercicio 3}
+
+Partiendo del estado de dos partes A y B, 
+$|\Phi_+\rangle_{AB} = \frac{1}{\sqrt{2}}(|00\rangle + |11\rangle)$,
+encontrar unitarias locales de Alice que lo transformen en cada
+uno de los otros elementos de la base de Bell.
+
+\subsubsection*{Respuesta}
+
+Sea $U$ una matriz unitaria, el resultado de aplicarla localmente
+para Alice se calcularía como 
+
+\begin{align*}
+  |\psi_f\rangle 
+    &= \Big(U \otimes \mathbb{1}\Big)|\Phi_+\rangle
+    = \frac{1}{\sqrt{2}}\Big(
+      \big(U \otimes \mathbb{1}\big)|00\rangle +
+      \big(U \otimes \mathbb{1}\big)|11\rangle
+    \Big) \\
+    &= \frac{1}{\sqrt{2}}\Big(
+      U|0\rangle \otimes \mathbb{1} |0\rangle +
+      U|1\rangle \otimes \mathbb{1} |1\rangle
+    \Big)
+    = \frac{1}{\sqrt{2}}\Big(
+      U|0\rangle \otimes |0\rangle +
+      U|1\rangle \otimes |1\rangle
+    \Big) 
+\end{align*}
+
+Si queremos que el estado final sea $|\Phi_+\rangle$,
+se debería de cumplir lo siguiente:
+
+$$
+  U|0\rangle \otimes |0\rangle +
+    U|1\rangle \otimes |1\rangle = |00\rangle + |11\rangle
+$$
+
+Es decir,
+
+$$
+  \begin{cases}
+    U|0\rangle = |0\rangle &\\
+    U|1\rangle = |1\rangle &\\
+  \end{cases}
+$$
+
+y sabemos que la matriz identidad $\mathbb{1}$ es unitaria y 
+lo cumple.
+
+Por otra parte, si queremos que el estado final sea $\Phi_-$,
+se debería de cumplir lo siguiente: 
+
+$$
+  U|0\rangle \otimes |0\rangle +
+    U|1\rangle \otimes |1\rangle = |00\rangle - |11\rangle
+$$
+
+Es decir,
+
+$$
+  \begin{cases}
+    U|0\rangle = |0\rangle &\\
+    U|1\rangle = -|1\rangle &\\
+  \end{cases}
+$$
+
+lo cual, si expresamos la matriz $U$ como $(u_{ij})_{i,j=1}^2$
+y desarrollamos las ecuaciones, determina $U$ como la matriz de 
+Pauli $\sigma_z$.
+
+Por otra parte, si queremos que el estado final sea $\Psi_+$,
+se debería de cumplir lo siguiente: 
+
+$$
+  U|0\rangle \otimes |0\rangle +
+    U|1\rangle \otimes |1\rangle = |01\rangle + |10\rangle
+$$
+
+Es decir,
+
+$$
+  \begin{cases}
+    U|0\rangle = |1\rangle &\\
+    U|1\rangle = |0\rangle &\\
+  \end{cases}
+$$
+
+lo cual, si expresamos de nuevo la matriz $U$ como 
+$(u_{ij})_{i,j=1}^2$ y desarrollamos las ecuaciones, determina $U$ 
+como la matriz de Pauli $\sigma_x$.
+
+Por último, si queremos que el estado final sea $\Psi_-$,
+se debería de cumplir lo siguiente: 
+
+$$
+  U|0\rangle \otimes |0\rangle +
+    U|1\rangle \otimes |1\rangle = |01\rangle - |10\rangle
+$$
+
+Es decir,
+
+$$
+  \begin{cases}
+    U|0\rangle = -|1\rangle &\\
+    U|1\rangle = |0\rangle &\\
+  \end{cases}
+$$
+
+lo cual, si expresamos de nuevo la matriz $U$ como 
+$(u_{ij})_{i,j=1}^2$ y desarrollamos las ecuaciones, determina $U$ 
+como la matriz
+
+$$
+\begin{pmatrix}
+   0 & 1 \\ 
+  -1 & 0 \\
+\end{pmatrix}
+$$
+
+\section*{Ejercicio 4}
+
+Tenemos un sistema de tres qubits (1, 2 y 3), que está en el 
+estado inicial $|0\rangle_1 \otimes |\Phi_+\rangle_{23}$.
+Supongamos que Alice tiene los qubits 1 y 2 y mide ese 
+sistema formado por dos qubits en la base de Bell. (Bob tiene 
+el qubit 3 pero no hace nada). ¿Cuál es la probabilidad de obtener 
+cada salida, y el estado final después de la medida?
+
+\subsubsection*{Respuesta}
+
+Las matrices con las que mide Alice son 
+
+\begin{align*}
+  P_{\Phi_+} &= |\Phi_+\rangle\langle\Phi_+| \\
+  P_{\Phi_-} &= |\Phi_-\rangle\langle\Phi_-| \\
+  P_{\Psi_+} &= |\Psi_+\rangle\langle\Psi_+| \\
+  P_{\Psi_-} &= |\Psi_-\rangle\langle\Psi_-| \\
+\end{align*}
+
+y, como sabemos que la base de Bell es ortonormal, podemos calcular
+la probabilidad de que salga $\Phi_+$ como
+
+\begin{align*}
+  p(\Phi_+) 
+    &= \Big(\langle 0| \otimes \langle \Phi_+|\Big)
+       \Big(|\Phi_+\rangle\langle\Phi_+|\otimes \mathbb{1}\Big)  
+       \Big(|0\rangle \otimes |\Phi_+\rangle\Big) \\
+    &= \frac{1}{2}
+    \Big(\langle 000| + \langle 011|\Big)
+    \Big(|\Phi_+\rangle\langle \Phi_+| \otimes \mathbb{1}\Big)
+    \Big(|000\rangle + |011\rangle\Big) \\
+    &= \frac{1}{2}
+      \Big(\langle 000|
+        \big(|\Phi_+ \rangle\langle \Phi_+|\otimes \mathbb{1}\big)
+      |000\rangle +
+      \langle 000|
+        \big(|\Phi_+ \rangle\langle \Phi_+|\otimes \mathbb{1}\big)
+      |011\rangle \\ &\;\;\;\;\;\;\;\;+
+      \langle 011|
+        \big(|\Phi_+ \rangle\langle \Phi_+|\otimes \mathbb{1}\big)
+      |000\rangle +
+      \langle 011|
+        \big(|\Phi_+ \rangle\langle \Phi_+|\otimes \mathbb{1}\big)
+      |011\rangle
+    \Big) \\
+    &= \frac{1}{2}\Big(
+      \langle 00|\Phi_+ \rangle\langle \Phi_+|00\rangle
+      \otimes 
+      \langle 0|\mathbb{1}|0\rangle +
+      \langle 00|\Phi_+ \rangle\langle \Phi_+|01\rangle
+      \otimes 
+      \langle 0|\mathbb{1}|1\rangle \\ &\;\;\;\;\;\;\;\;+
+      \langle 01|\Phi_+ \rangle\langle \Phi_+|00\rangle
+      \otimes 
+      \langle 1|\mathbb{1}|0\rangle +
+      \langle 01|\Phi_+ \rangle\langle \Phi_+|01\rangle
+      \otimes 
+      \langle 1|\mathbb{1}|1\rangle
+      \Big) \\ 
+   &= \frac{1}{2}\Big(
+      \frac{1}{2} \otimes 1 + 0 + 0 + 0
+      \Big) \\ 
+   &= \frac{1}{4} 
+\end{align*}
+
+puesto que 
+
+\begin{align*}
+  \langle \Phi_+|00\rangle 
+    &= \langle 00|\Phi_+\rangle 
+    = \frac{1}{\sqrt{2}}\Big(
+    \langle 00|00\rangle + \langle 00|11\rangle\Big)
+    = \frac{1}{\sqrt{2}}(1 + 0)
+    = \frac{1}{\sqrt{2}} \\
+  \langle \Phi_+|01\rangle
+    &=\langle 01|\Phi_+\rangle 
+    = \frac{1}{\sqrt{2}}\Big(
+      \langle 01|00\rangle + \langle 01|11\rangle\Big)
+    = \frac{1}{\sqrt{2}}(0 + 0)
+    = 0
+\end{align*}
+
+El estado final en caso de que salga $\Phi_+$ es 
+
+\begin{align*}
+  |\psi_f\rangle &= \frac
+    {\Big(P_{\Phi_+} \otimes \mathbb{1}\Big)
+    \Big(|0\rangle\otimes|\Phi_+\rangle\Big)}
+    {\sqrt{p(\Phi_+)}} \\ 
+  &= \sqrt{4}\frac{1}{\sqrt{2}}
+    \Big(|\Phi_+\rangle\langle \Phi_+| \otimes \mathbb{1}\Big)
+    \Big(|000\rangle + |011\rangle\Big) \\
+  &= \sqrt{2}\Big(
+  \big(|\Phi_+\rangle\langle \Phi_+| \otimes \mathbb{1}\big)|000
+    \rangle +
+  \big(|\Phi_+\rangle\langle \Phi_+| \otimes \mathbb{1}\big)|011
+    \rangle
+  \Big) \\ 
+  &= \sqrt{2}\Big(
+  |\Phi_+\rangle\langle \Phi_+|00\rangle \otimes 
+    \mathbb{1}|0\rangle +
+  |\Phi_+\rangle\langle \Phi_+|01\rangle \otimes 
+    \mathbb{1}|1\rangle
+  \Big) \\ 
+  &= \sqrt{2}\Big(
+    \frac{1}{\sqrt{2}}|\Phi_+\rangle \otimes |0 \rangle + 0
+  \Big) \\ 
+  &= |\Phi_+\rangle \otimes |0 \rangle
+\end{align*}
+
+La probabilidad de que salga $\Phi_-$ es
+
+\begin{align*}
+  p(\Phi_-) 
+    &= \Big(\langle 0| \otimes \langle \Phi_+|\Big)
+       \Big(|\Phi_-\rangle\langle\Phi_-|\otimes \mathbb{1}\Big)  
+       \Big(|0\rangle \otimes |\Phi_+\rangle\Big) \\
+    &= \frac{1}{2}
+    \Big(\langle 000| + \langle 011|\Big)
+    \Big(|\Phi_-\rangle\langle \Phi_-| \otimes \mathbb{1}\Big)
+    \Big(|000\rangle + |011\rangle\Big) \\
+    &= \frac{1}{2}
+      \Big(\langle 000|
+        \big(|\Phi_- \rangle\langle \Phi_-|\otimes \mathbb{1}\big)
+      |000\rangle +
+      \langle 000|
+        \big(|\Phi_- \rangle\langle \Phi_-|\otimes \mathbb{1}\big)
+      |011\rangle \\ &\;\;\;\;\;\;\;\;+
+      \langle 011|
+        \big(|\Phi_- \rangle\langle \Phi_-|\otimes \mathbb{1}\big)
+      |000\rangle +
+      \langle 011|
+        \big(|\Phi_- \rangle\langle \Phi_-|\otimes \mathbb{1}\big)
+      |011\rangle
+    \Big) \\
+    &= \frac{1}{2}\Big(
+      \langle 00|\Phi_- \rangle\langle \Phi_-|00\rangle
+      \otimes 
+      \langle 0|\mathbb{1}|0\rangle +
+      \langle 00|\Phi_- \rangle\langle \Phi_-|01\rangle
+      \otimes 
+      \langle 0|\mathbb{1}|1\rangle \\ &\;\;\;\;\;\;\;\;+
+      \langle 01|\Phi_- \rangle\langle \Phi_-|00\rangle
+      \otimes 
+      \langle 1|\mathbb{1}|0\rangle +
+      \langle 01|\Phi_- \rangle\langle \Phi_-|01\rangle
+      \otimes 
+      \langle 1|\mathbb{1}|1\rangle
+      \Big) \\ 
+   &= \frac{1}{2}\Big(
+      \frac{1}{2} \otimes 1 + 0 + 0 + 0
+      \Big) \\ 
+   &= \frac{1}{4} 
+\end{align*}
+
+puesto que 
+
+\begin{align*}
+  \langle \Phi_-|00\rangle 
+    &= \langle 00|\Phi_-\rangle 
+    = \frac{1}{\sqrt{2}}\Big(
+    \langle 00|00\rangle - \langle 00|11\rangle\Big)
+    = \frac{1}{\sqrt{2}}(1 - 0)
+    = \frac{1}{\sqrt{2}} \\
+  \langle \Phi_-|01\rangle
+    &=\langle 01|\Phi_-\rangle 
+    = \frac{1}{\sqrt{2}}\Big(
+      \langle 01|00\rangle - \langle 01|11\rangle\Big)
+    = \frac{1}{\sqrt{2}}(0 - 0)
+    = 0
+\end{align*}
+
+El estado final en caso de que salga $\Phi_-$ es 
+
+\begin{align*}
+  |\psi_f\rangle &= \frac
+    {\Big(P_{\Phi_-} \otimes \mathbb{1}\Big)
+    \Big(|0\rangle\otimes|\Phi_+\rangle\Big)}
+    {\sqrt{p(\Phi_-)}} \\ 
+  &= \sqrt{4}\frac{1}{\sqrt{2}}
+    \Big(|\Phi_-\rangle\langle \Phi_-| \otimes \mathbb{1}\Big)
+    \Big(|000\rangle + |011\rangle\Big) \\
+  &= \sqrt{2}\Big(
+  \big(|\Phi_-\rangle\langle \Phi_-| \otimes \mathbb{1}\big)|000
+    \rangle +
+  \big(|\Phi_-\rangle\langle \Phi_-| \otimes \mathbb{1}\big)|011
+    \rangle
+  \Big) \\ 
+  &= \sqrt{2}\Big(
+  |\Phi_-\rangle\langle \Phi_-|00\rangle \otimes 
+    \mathbb{1}|0\rangle +
+  |\Phi_-\rangle\langle \Phi_-|01\rangle \otimes 
+    \mathbb{1}|1\rangle
+  \Big) \\ 
+  &= \sqrt{2}\Big(
+    \frac{1}{\sqrt{2}}|\Phi_-\rangle \otimes |0 \rangle + 0
+  \Big) \\ 
+  &= |\Phi_-\rangle \otimes |0 \rangle
+\end{align*}
+
+La probabilidad de que salga $\Psi_+$ es
+
+\begin{align*}
+  p(\Psi_+) 
+    &= \Big(\langle 0| \otimes \langle \Phi_+|\Big)
+       \Big(|\Psi_+\rangle\langle\Psi_+|\otimes \mathbb{1}\Big)  
+       \Big(|0\rangle \otimes |\Phi_+\rangle\Big) \\
+    &= \frac{1}{2}
+    \Big(\langle 000| + \langle 011|\Big)
+    \Big(|\Psi_+\rangle\langle \Psi_+| \otimes \mathbb{1}\Big)
+    \Big(|000\rangle + |011\rangle\Big) \\
+    &= \frac{1}{2}
+      \Big(\langle 000|
+        \big(|\Psi_+ \rangle\langle \Psi_+|\otimes \mathbb{1}\big)
+      |000\rangle +
+      \langle 000|
+        \big(|\Psi_+ \rangle\langle \Psi_+|\otimes \mathbb{1}\big)
+      |011\rangle \\ &\;\;\;\;\;\;\;\;+
+      \langle 011|
+        \big(|\Psi_+ \rangle\langle \Psi_+|\otimes \mathbb{1}\big)
+      |000\rangle +
+      \langle 011|
+        \big(|\Psi_+ \rangle\langle \Psi_+|\otimes \mathbb{1}\big)
+      |011\rangle
+    \Big) \\
+    &= \frac{1}{2}\Big(
+      \langle 00|\Psi_+ \rangle\langle \Psi_+|00\rangle
+      \otimes 
+      \langle 0|\mathbb{1}|0\rangle +
+      \langle 00|\Psi_+ \rangle\langle \Psi_+|01\rangle
+      \otimes 
+      \langle 0|\mathbb{1}|1\rangle \\ &\;\;\;\;\;\;\;\;+
+      \langle 01|\Psi_+ \rangle\langle \Psi_+|00\rangle
+      \otimes 
+      \langle 1|\mathbb{1}|0\rangle +
+      \langle 01|\Psi_+ \rangle\langle \Psi_+|01\rangle
+      \otimes 
+      \langle 1|\mathbb{1}|1\rangle
+      \Big) \\ 
+   &= \frac{1}{2}\Big(
+      0 + 0 + 0 + \frac{1}{2} \otimes 1
+      \Big) \\ 
+   &= \frac{1}{4} 
+\end{align*}
+
+puesto que 
+
+\begin{align*}
+  \langle \Psi_+|00\rangle 
+    &= \langle 00|\Psi_+\rangle 
+    = \frac{1}{\sqrt{2}}\Big(
+    \langle 00|01\rangle + \langle 00|10\rangle\Big)
+    = \frac{1}{\sqrt{2}}(0 + 0)
+    = 0 \\
+  \langle \Psi_+|01\rangle
+    &=\langle 01|\Psi_+\rangle 
+    = \frac{1}{\sqrt{2}}\Big(
+      \langle 01|01\rangle + \langle 01|10\rangle\Big)
+    = \frac{1}{\sqrt{2}}(1 + 0)
+    = \frac{1}{\sqrt{2}}
+\end{align*}
+
+El estado final en caso de que salga $\Psi_+$ es 
+
+\begin{align*}
+  |\psi_f\rangle &= \frac
+    {\Big(P_{\Psi_+} \otimes \mathbb{1}\Big)
+    \Big(|0\rangle\otimes|\Phi_+\rangle\Big)}
+    {\sqrt{p(\Psi_+)}} \\ 
+  &= \sqrt{4}\frac{1}{\sqrt{2}}
+    \Big(|\Psi_+\rangle\langle \Psi_+| \otimes \mathbb{1}\Big)
+    \Big(|000\rangle + |011\rangle\Big) \\
+  &= \sqrt{2}\Big(
+  \big(|\Psi_+\rangle\langle \Psi_+| \otimes \mathbb{1}\big)|000
+    \rangle +
+  \big(|\Psi_+\rangle\langle \Psi_+| \otimes \mathbb{1}\big)|011
+    \rangle
+  \Big) \\ 
+  &= \sqrt{2}\Big(
+  |\Psi_+\rangle\langle \Psi_+|00\rangle \otimes 
+    \mathbb{1}|0\rangle +
+  |\Psi_+\rangle\langle \Psi_+|01\rangle \otimes 
+    \mathbb{1}|1\rangle
+  \Big) \\ 
+  &= \sqrt{2}\Big(
+    0 + \frac{1}{\sqrt{2}}|\Psi_+\rangle \otimes |1 \rangle
+  \Big) \\ 
+  &= |\Psi_+\rangle \otimes |1 \rangle
+\end{align*}
+
+Por último, la probabilidad de que salga $\Psi_-$ es
+
+\begin{align*}
+  p(\Psi_-) 
+    &= \Big(\langle 0| \otimes \langle \Phi_+|\Big)
+       \Big(|\Psi_-\rangle\langle\Psi_-|\otimes \mathbb{1}\Big)  
+       \Big(|0\rangle \otimes |\Phi_+\rangle\Big) \\
+    &= \frac{1}{2}
+    \Big(\langle 000| + \langle 011|\Big)
+    \Big(|\Psi_-\rangle\langle \Psi_-| \otimes \mathbb{1}\Big)
+    \Big(|000\rangle + |011\rangle\Big) \\
+    &= \frac{1}{2}
+      \Big(\langle 000|
+        \big(|\Psi_- \rangle\langle \Psi_-|\otimes \mathbb{1}\big)
+      |000\rangle +
+      \langle 000|
+        \big(|\Psi_- \rangle\langle \Psi_-|\otimes \mathbb{1}\big)
+      |011\rangle \\ &\;\;\;\;\;\;\;\;+
+      \langle 011|
+        \big(|\Psi_- \rangle\langle \Psi_-|\otimes \mathbb{1}\big)
+      |000\rangle +
+      \langle 011|
+        \big(|\Psi_- \rangle\langle \Psi_-|\otimes \mathbb{1}\big)
+      |011\rangle
+    \Big) \\
+    &= \frac{1}{2}\Big(
+      \langle 00|\Psi_- \rangle\langle \Psi_-|00\rangle
+      \otimes 
+      \langle 0|\mathbb{1}|0\rangle +
+      \langle 00|\Psi_- \rangle\langle \Psi_-|01\rangle
+      \otimes 
+      \langle 0|\mathbb{1}|1\rangle \\ &\;\;\;\;\;\;\;\;+
+      \langle 01|\Psi_- \rangle\langle \Psi_-|00\rangle
+      \otimes 
+      \langle 1|\mathbb{1}|0\rangle +
+      \langle 01|\Psi_- \rangle\langle \Psi_-|01\rangle
+      \otimes 
+      \langle 1|\mathbb{1}|1\rangle
+      \Big) \\ 
+   &= \frac{1}{2}\Big(
+      0 + 0 + 0 + \frac{1}{2} \otimes 1
+      \Big) \\ 
+   &= \frac{1}{4} 
+\end{align*}
+
+puesto que 
+
+\begin{align*}
+  \langle \Psi_-|00\rangle 
+    &= \langle 00|\Psi_-\rangle 
+    = \frac{1}{\sqrt{2}}\Big(
+    \langle 00|01\rangle - \langle 00|10\rangle\Big)
+    = \frac{1}{\sqrt{2}}(0 - 0)
+    = 0 \\
+  \langle \Psi_-|01\rangle
+    &=\langle 01|\Psi_-\rangle 
+    = \frac{1}{\sqrt{2}}\Big(
+      \langle 01|01\rangle - \langle 01|10\rangle\Big)
+    = \frac{1}{\sqrt{2}}(1 - 0)
+    = \frac{1}{\sqrt{2}}
+\end{align*}
+
+El estado final en caso de que salga $\Psi_-$ es 
+
+\begin{align*}
+  |\psi_f\rangle &= \frac
+    {\Big(P_{\Psi_-} \otimes \mathbb{1}\Big)
+    \Big(|0\rangle\otimes|\Phi_+\rangle\Big)}
+    {\sqrt{p(\Psi_-)}} \\ 
+  &= \sqrt{4}\frac{1}{\sqrt{2}}
+    \Big(|\Psi_-\rangle\langle \Psi_-| \otimes \mathbb{1}\Big)
+    \Big(|000\rangle + |011\rangle\Big) \\
+  &= \sqrt{2}\Big(
+  \big(|\Psi_-\rangle\langle \Psi_-| \otimes \mathbb{1}\big)|000
+    \rangle +
+  \big(|\Psi_-\rangle\langle \Psi_-| \otimes \mathbb{1}\big)|011
+    \rangle
+  \Big) \\ 
+  &= \sqrt{2}\Big(
+  |\Psi_-\rangle\langle \Psi_-|00\rangle \otimes 
+    \mathbb{1}|0\rangle +
+  |\Psi_-\rangle\langle \Psi_-|01\rangle \otimes 
+    \mathbb{1}|1\rangle
+  \Big) \\ 
+  &= \sqrt{2}\Big(
+    0 + \frac{1}{\sqrt{2}}|\Psi_-\rangle \otimes |1 \rangle
+  \Big) \\ 
+  &= |\Psi_-\rangle \otimes |1 \rangle
+\end{align*}
+
+\end{document}

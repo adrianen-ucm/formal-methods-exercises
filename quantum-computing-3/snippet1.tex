@@ -1,0 +1,6 @@
+\begin{minted}{haskell}
+print_simple PDF $ do \(x, y) ->
+  controlled_not_at y x
+  controlled_not_at x y
+  controlled_not y x
+\end{minted}
