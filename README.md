@@ -38,5 +38,6 @@ Some exercises delivered during a master's degree in formal methods
 - [Introduction to quantum mechanics.](./quantum-computing-1/quantum-computing-1.pdf)
 - [Quantum cryptography and error correction codes.](./quantum-computing-2/quantum-computing-2.pdf)
 - [Shor's algorithm and quantum computing.](./quantum-computing-3/quantum-computing-3.pdf)
-- [Quantum teleportation.](./entangled-exchange-example/entangled-exchange-example.pdf)
+- [Entanglement swapping.](./entanglement-swapping/entanglement-swapping.pdf)
+- [Quantum teleportation guess.](./teleportation-guess/teleportation-guess.pdf)
 

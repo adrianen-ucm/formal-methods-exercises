@@ -45,7 +45,7 @@ En primer lugar, al estado inicial
 \begin{align*}
   |\psi_0\rangle &= |\beta_{01}\rangle \otimes |\beta_{00}\rangle \\ 
          &= \frac{1}{2}\Big(
-            |0100\rangle + |0111\rangle -|1000\rangle - |1011\rangle
+            |0100\rangle + |0111\rangle - |1000\rangle - |1011\rangle
          \Big)
 \end{align*}
 
@@ -59,7 +59,7 @@ se le aplicaría una puerta CNOT en los qubits 2 y 3:
           \otimes \mathbb{1}
           \Big)|\psi_0\rangle \\ 
         &= \frac{1}{2}\Big(
-          |0110\rangle + |0101\rangle -|1000\rangle - |1011\rangle
+          |0110\rangle + |0101\rangle - |1000\rangle - |1011\rangle
         \Big)
 \end{align*}
 
@@ -119,14 +119,13 @@ En caso de que saliese $00$, el estado cambiaría como sigue:
           |0001\rangle 
           - |1000\rangle 
         \Big) \\ 
+        &= |00\rangle_{23}\otimes|\beta_{01}\rangle_{14}
 \end{align*}
 
-Alice transmitiría el resultado de la medida a Bob, que consiste en
-$2$ bits de información clásica, y Bob sabría que ya tiene el estado
-teleportado. Se puede apreciar que el estado de los qubits de Alice
-ha terminado siendo $|00\rangle$, mientras que el de Bob junto con
-el restante $\frac{1}{\sqrt{2}}(|01\rangle - |10\rangle)
-= |\beta_{01}\rangle$.
+Alice transmitiría el resultado de la medida a Bob, que consiste en $2$ bits de
+información clásica, y Bob sabría que ya tiene el estado teleportado. Se puede
+apreciar que el estado de los qubits de Alice ha terminado siendo $|00\rangle$,
+mientras que el de Bob junto con el restante $|\beta_{01}\rangle$.
 
 En caso de que saliese $01$, el estado cambiaría como sigue:
 
@@ -158,13 +157,13 @@ teleportado por Alice:
         &= \frac{1}{\sqrt{2}}\Big(
           |0011\rangle 
           - |1010\rangle 
-        \Big) \\ 
+        \Big) \\
+        &= |01\rangle_{23}\otimes|\beta_{01}\rangle_{14}
 \end{align*}
 
 En este caso, el estado de los qubits de Alice ha terminado siendo
-$|01\rangle$, mientras que el de Bob junto con el restante es de
-nuevo $\frac{1}{\sqrt{2}}(|01\rangle - |10\rangle)
-= |\beta_{01}\rangle$.
+$|01\rangle$, mientras que el de Bob junto con el restante es de nuevo
+$|\beta_{01}\rangle$.
 
 El resto de casos serían análogos, dando lugar al mismo resultado:
 los qubits de Alice terminan con un estado de la base canónica,

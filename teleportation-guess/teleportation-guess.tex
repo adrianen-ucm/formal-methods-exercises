@@ -1,0 +1,76 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+
+\title{%
+	Teleportación de estados cuánticos \\ 
+  \large La transmisión no es superlumínica
+}
+\author{
+	Daniela Ferreiro \and 
+	Adrián Enríquez \and 
+	Daniel Trujillo
+}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+Después de que Alice mida sus qubits, el de Bob puede estar en cada
+uno de los siguientes estados con misma probabilidad: 
+
+\begin{align*}
+  &\alpha|0\rangle + \beta|1\rangle \\ 
+  &\alpha|1\rangle + \beta|0\rangle \\ 
+  &\alpha|0\rangle - \beta|1\rangle \\ 
+  &\alpha|1\rangle - \beta|0\rangle \\
+\end{align*}
+
+donde $\alpha|0\rangle + \beta|1\rangle$ es el estado del qubit que
+se pretende teleportar a Bob.
+
+Supongamos que Bob no espera a recibir el resultado de las medidas,
+que no puede viajar más rápido que la velocidad de la luz, y supone
+al azar que ha salido cierta medida. Parece que, como con
+$\frac{1}{4}$ de probabilidad podría terminar correctamente el
+protocolo, en este punto se puede haber transmitido información
+a velocidad superlumínica.
+
+Sin embargo, Bob no tiene ninguna manera de obtener información
+sobre el estado teleportado a través de su estado actual. Para
+formalizar este resultado necesitaríamos algunos conceptos que no
+hemos visto en el curso, pero vamos a ver un ejemplo ilustrativo
+y simple.
+
+Si intentase obtener información midiendo su estado con la base
+canónica, teniendo en cuanta cada una de las cuatro posibles
+situaciones, la probabilidad de que saliese $0$ sería 
+
+$$
+\frac{1}{4}|\alpha|^2
+  + \frac{1}{4}|\beta|^2
+  + \frac{1}{4}|\alpha|^2
+  + \frac{1}{4}|\beta|^2
+= \frac{1}{2}(|\alpha|^2 + |\beta|^2)
+= \frac{1}{2}
+$$
+
+mientras que la probabilidad de que saliese $1$ sería 
+
+$$
+\frac{1}{4}|\beta|^2
+  + \frac{1}{4}|\alpha|^2
+  + \frac{1}{4}|\beta|^2
+  + \frac{1}{4}|\alpha|^2
+= \frac{1}{2}(|\beta|^2 + |\alpha|^2)
+= \frac{1}{2}
+$$
+
+Esto sucede de manera independie a los valores de $\alpha$
+y $\beta$, por lo que su intento de obtener información no tendría
+éxito fuese cual fuese el estado teleportado.
+
+\end{document}
